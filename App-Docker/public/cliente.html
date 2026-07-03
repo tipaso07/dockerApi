@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tienda - App Tienda</title>
+  <link rel="stylesheet" href="/css/estilos.css">
+</head>
+<body>
+  <div class="layout">
+    <nav class="sidebar">
+      <h3>Tienda</h3>
+      <div class="user-info" id="sidebar-user"></div>
+      <a class="active" data-section="productos">Productos</a>
+      <a data-section="mis-pedidos">Mis Pedidos</a>
+      <div class="logout"><a id="btn-logout">Cerrar Sesión</a></div>
+    </nav>
+    <div class="main-content">
+      <div class="section active" id="sec-productos">
+        <h1>Productos</h1>
+        <div class="form-inline">
+          <select id="filtro-categoria">
+            <option value="">Todas las categorías</option>
+          </select>
+          <input type="text" id="buscar-producto" placeholder="Buscar producto...">
+        </div>
+        <div class="productos-grid" id="productos-grid"></div>
+      </div>
+      <div class="section" id="sec-mis-pedidos">
+        <h1>Mis Pedidos</h1>
+        <table>
+          <thead><tr><th>Boleta</th><th>Total</th><th>Método Pago</th><th>Dirección</th><th>Repartidor</th><th>Fecha</th><th>Estado</th><th>Detalle</th></tr></thead>
+          <tbody id="pedidos-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <button class="cart-fab" id="cart-fab">
+    🛒
+    <span class="badge" id="cart-count">0</span>
+  </button>
+
+  <div class="cart-panel hidden" id="cart-panel">
+    <h3>Carrito de Compras</h3>
+    <div id="cart-items"></div>
+    <div class="cart-total" id="cart-total">Total: S/. 0.00</div>
+    <select id="cart-metodo-pago">
+      <option value="Yape">Yape</option>
+      <option value="Plin">Plin</option>
+      <option value="Tarjeta">Tarjeta</option>
+      <option value="Efectivo">Efectivo</option>
+    </select>
+    <input type="text" id="cart-direccion" placeholder="Dirección de entrega">
+    <button id="btn-realizar-pedido">Realizar Pedido</button>
+    <button class="close-cart" id="btn-cerrar-carrito">Cerrar</button>
+  </div>
+
+  <div class="toast-container" id="toast-container"></div>
+
+  <div class="modal-overlay hidden" id="modal-detalle">
+    <div class="modal">
+      <h2 id="detalle-boleta">Boleta</h2>
+      <p id="detalle-fecha" style="color:#718096;font-size:13px;margin-bottom:12px;"></p>
+      <div id="detalle-estado" style="margin-bottom:12px;"></div>
+      <div class="detalle-productos">
+        <table>
+          <thead><tr><th>Producto</th><th>Cant.</th><th>Precio</th><th>Subtotal</th></tr></thead>
+          <tbody id="detalle-productos-tbody"></tbody>
+        </table>
+      </div>
+      <div class="detalle-totales">
+        <div>Subtotal: S/. <span id="detalle-subtotal">0.00</span></div>
+        <div>IGV (18%): S/. <span id="detalle-igv">0.00</span></div>
+        <div><strong>Total: S/. <span id="detalle-total">0.00</span></strong></div>
+      </div>
+      <p style="margin-top:12px;font-size:13px;color:#718096;">
+        <strong>Dirección:</strong> <span id="detalle-direccion"></span><br>
+        <strong>Método de pago:</strong> <span id="detalle-pago"></span>
+      </p>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="cerrarModal('modal-detalle')">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/cliente.js"></script>
+</body>
+</html>

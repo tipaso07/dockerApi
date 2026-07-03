@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel Admin - App Tienda</title>
+  <link rel="stylesheet" href="/css/estilos.css">
+</head>
+
+<body>
+  <div class="layout">
+    <nav class="sidebar">
+      <h3>Panel Admin</h3>
+      <div class="user-info" id="sidebar-user"></div>
+      <a class="active" data-section="pedidos">Pedidos</a>
+      <a data-section="inventario">Inventario</a>
+      <a data-section="usuarios">Usuarios</a>
+      <div class="logout"><a id="btn-logout">Cerrar Sesión</a></div>
+    </nav>
+    <div class="main-content">
+      <div class="section active" id="sec-pedidos">
+        <h1>Gestión de Pedidos</h1>
+        <table>
+          <thead>
+            <tr>
+              <th>Boleta</th>
+              <th>Cliente</th>
+              <th>Repartidor</th>
+              <th>Total</th>
+              <th>Método Pago</th>
+              <th>Fecha</th>
+              <th>Estado</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody id="pedidos-tbody"></tbody>
+        </table>
+      </div>
+      <div class="section" id="sec-inventario">
+        <h1>Inventario</h1>
+        <div class="form-inline" id="producto-form">
+          <input type="text" id="prod-nombre" placeholder="Nombre">
+          <input type="number" id="prod-precio" placeholder="Precio" step="0.01">
+          <input type="number" id="prod-stock" placeholder="Stock">
+          <select id="prod-categoria">
+            <option value="">Categoría</option>
+            <option value="Alimentos">Alimentos</option>
+            <option value="Cuidado Personal">Cuidado Personal</option>
+          </select>
+          <input type="number" id="prod-valoracion" placeholder="Valoración" step="0.1" min="0" max="5">
+          <input type="text" id="prod-descripcion" placeholder="Descripción">
+          <button id="btn-guardar-producto">Agregar</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Categoría</th>
+              <th>Precio</th>
+              <th>Stock</th>
+              <th>Valoración</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="productos-tbody"></tbody>
+        </table>
+      </div>
+      <div class="section" id="sec-usuarios">
+        <h1>Gestión de Usuarios</h1>
+        <button class="btn-agregar-usuario"
+          style="padding:10px 20px;background:#38a169;color:#fff;border:none;border-radius:8px;cursor:pointer;margin-bottom:16px;font-size:14px;"
+          onclick="abrirModal('modal-agregar-usuario')">+ Agregar Usuario</button>
+        <table>
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Email</th>
+              <th>Rol</th>
+              <th>Registro</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="usuarios-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="toast-container" id="toast-container"></div>
+
+  <div class="modal-overlay hidden" id="modal-editar-usuario">
+    <div class="modal">
+      <h2>Editar Usuario</h2>
+      <input type="hidden" id="edit-user-id">
+      <label>Nombre</label>
+      <input type="text" id="edit-user-nombre">
+      <label>Email</label>
+      <input type="email" id="edit-user-email">
+      <label>Rol</label>
+      <select id="edit-user-rol">
+        <option value="Cliente">Cliente</option>
+        <option value="Admin">Administrador</option>
+        <option value="Repartidor">Repartidor</option>
+      </select>
+      <label>Nueva contraseña (dejar vacío para mantener)</label>
+      <input type="password" id="edit-user-password" placeholder="••••••••">
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="cerrarModal('modal-editar-usuario')">Cancelar</button>
+        <button class="btn-primary" id="btn-guardar-usuario">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay hidden" id="modal-agregar-usuario">
+    <div class="modal">
+      <h2>Agregar Usuario</h2>
+      <label>Nombre</label>
+      <input type="text" id="add-user-nombre">
+      <label>Email</label>
+      <input type="email" id="add-user-email">
+      <label>Contraseña</label>
+      <input type="password" id="add-user-password">
+      <label>Rol</label>
+      <select id="add-user-rol">
+        <option value="Cliente">Cliente</option>
+        <option value="Repartidor">Repartidor</option>
+        <option value="Admin">Administrador</option>
+      </select>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="cerrarModal('modal-agregar-usuario')">Cancelar</button>
+        <button class="btn-primary" id="btn-guardar-nuevo-usuario">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay hidden" id="modal-editar-producto">
+    <div class="modal">
+      <h2>Editar Producto</h2>
+      <input type="hidden" id="edit-prod-id">
+      <label>Nombre</label>
+      <input type="text" id="edit-prod-nombre">
+      <label>Precio</label>
+      <input type="number" id="edit-prod-precio" step="0.01">
+      <label>Stock</label>
+      <input type="number" id="edit-prod-stock">
+      <label>Categoría</label>
+      <select id="edit-prod-categoria">
+        <option value="Alimentos">Alimentos</option>
+        <option value="Cuidado Personal">Cuidado Personal</option>
+      </select>
+      <label>Valoración (0-5)</label>
+      <input type="number" id="edit-prod-valoracion" step="0.1" min="0" max="5">
+      <label>Descripción</label>
+      <input type="text" id="edit-prod-descripcion">
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="cerrarModal('modal-editar-producto')">Cancelar</button>
+        <button class="btn-primary" id="btn-guardar-editar-producto">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay hidden" id="modal-editar-pedido">
+    <div class="modal">
+      <h2 id="edit-pedido-titulo">Editar Pedido</h2>
+      <input type="hidden" id="edit-pedido-id">
+      <h3>Detalle de Boleta</h3>
+      <p id="edit-pedido-boleta" style="font-size:14px;color:#4a5568;"></p>
+      <div class="detalle-productos">
+        <table>
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>Cant.</th>
+              <th>Precio</th>
+              <th>Subtotal</th>
+            </tr>
+          </thead>
+          <tbody id="edit-pedido-productos"></tbody>
+        </table>
+      </div>
+      <div class="detalle-totales" style="margin-bottom:16px;">
+        <div>Subtotal: S/. <span id="edit-pedido-subtotal">0.00</span></div>
+        <div>IGV: S/. <span id="edit-pedido-igv">0.00</span></div>
+        <div><strong>Total: S/. <span id="edit-pedido-total">0.00</span></strong></div>
+      </div>
+      <label>Estado</label>
+      <select id="edit-pedido-estado">
+        <option value="Pendiente">Pendiente</option>
+        <option value="En Camino">En Camino</option>
+        <option value="Entregado">Entregado</option>
+        <option value="Cancelado">Cancelado</option>
+      </select>
+      <label>Repartidor asignado</label>
+      <select id="edit-pedido-repartidor">
+        <option value="">Sin asignar</option>
+      </select>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="cerrarModal('modal-editar-pedido')">Cancelar</button>
+        <button class="btn-primary" id="btn-guardar-pedido">Guardar Cambios</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/admin.js"></script>
+  <script>
+    const socket = io();
+    socket.on('alerta_nuevo_pedido', (pedido) => {
+      if (usuario?.rol === 'Admin') {
+        reproducirSonido();
+        mostrarToast(`¡Nuevo pedido! ${pedido.boleta.numeroBoleta} - S/. ${pedido.boleta.montoTotal.toFixed(2)}`, 'info');
+        cargarPedidos();
+      }
+    });
+  </script>
+</body>
+
+</html>

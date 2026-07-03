@@ -1,0 +1,39 @@
+services:
+  base-datos:
+    image: mongo:latest
+    container_name: mongodb-datos
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  servidor-app:
+    build: .
+    container_name: node-aplicacion
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    depends_on:
+      base-datos:
+        condition: service_healthy
+    environment:
+      - MONGO_URI=mongodb://base-datos:27017/mongodb-datos
+    command: npm run dev
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:3000/api/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+volumes:
+  mongo_data:

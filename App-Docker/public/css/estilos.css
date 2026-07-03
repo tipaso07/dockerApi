@@ -1,0 +1,183 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f6fa; color: #333; }
+
+/* Login / Register */
+.auth-container {
+  display: flex; justify-content: center; align-items: center; min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+.auth-card {
+  background: #fff; border-radius: 12px; padding: 40px; width: 400px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+}
+.auth-card h2 { text-align: center; margin-bottom: 24px; color: #333; }
+.auth-card input, .auth-card select {
+  width: 100%; padding: 12px 16px; margin-bottom: 16px; border: 1px solid #ddd;
+  border-radius: 8px; font-size: 14px;
+}
+.auth-card input:focus { outline: none; border-color: #667eea; }
+.auth-card button {
+  width: 100%; padding: 12px; background: #667eea; color: #fff; border: none;
+  border-radius: 8px; font-size: 16px; cursor: pointer; transition: background 0.3s;
+}
+.auth-card button:hover { background: #5a67d8; }
+.auth-card .toggle-link { text-align: center; margin-top: 16px; color: #667eea; cursor: pointer; }
+.auth-card .toggle-link:hover { text-decoration: underline; }
+.auth-card .error { color: #e53e3e; text-align: center; margin-bottom: 12px; }
+
+/* Layout con Sidebar */
+.layout { display: flex; min-height: 100vh; }
+.sidebar {
+  width: 260px; background: #2d3748; color: #fff; padding: 24px 0;
+  position: fixed; top: 0; left: 0; height: 100vh;
+}
+.sidebar h3 { padding: 0 20px; margin-bottom: 24px; font-size: 18px; }
+.sidebar .user-info { padding: 0 20px; margin-bottom: 20px; font-size: 13px; color: #a0aec0; }
+.sidebar a {
+  display: block; padding: 12px 20px; color: #cbd5e0; text-decoration: none;
+  transition: all 0.2s; font-size: 14px; cursor: pointer;
+}
+.sidebar a:hover, .sidebar a.active { background: #4a5568; color: #fff; border-left: 4px solid #667eea; }
+.sidebar .logout { margin-top: auto; position: absolute; bottom: 24px; left: 0; right: 0; padding: 0 20px; }
+.sidebar .logout a { color: #fc8181; }
+.main-content { margin-left: 260px; flex: 1; padding: 32px; }
+
+/* Secciones */
+.section { display: none; }
+.section.active { display: block; }
+.section h1 { margin-bottom: 24px; font-weight: 600; color: #2d3748; }
+
+/* Tablas */
+table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 24px; }
+th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
+th { background: #f7fafc; font-weight: 600; color: #4a5568; }
+tr:hover { background: #f7fafc; }
+
+/* Formularios en linea */
+.form-inline { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 24px; }
+.form-inline input, .form-inline select { padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
+.form-inline input:focus { outline: none; border-color: #667eea; }
+.form-inline button {
+  padding: 10px 20px; background: #667eea; color: #fff; border: none;
+  border-radius: 8px; cursor: pointer; font-size: 14px; transition: background 0.2s;
+}
+.form-inline button:hover { background: #5a67d8; }
+.form-inline button.danger { background: #e53e3e; }
+.form-inline button.danger:hover { background: #c53030; }
+.form-inline button.success { background: #38a169; }
+.form-inline button.success:hover { background: #2f855a; }
+
+/* Grid de productos */
+.productos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
+.producto-card {
+  background: #fff; border-radius: 10px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  transition: transform 0.2s;
+}
+.producto-card:hover { transform: translateY(-2px); }
+.producto-card h3 { font-size: 16px; margin-bottom: 8px; color: #2d3748; }
+.producto-card .categoria { font-size: 12px; color: #667eea; margin-bottom: 4px; }
+.producto-card .precio { font-size: 20px; font-weight: 700; color: #38a169; margin-bottom: 8px; }
+.producto-card .stock { font-size: 13px; color: #718096; margin-bottom: 12px; }
+.producto-card .descripcion { font-size: 13px; color: #a0aec0; margin-bottom: 12px; }
+.producto-card input[type="number"] { width: 60px; padding: 6px; border: 1px solid #ddd; border-radius: 6px; margin-right: 8px; }
+.producto-card button {
+  padding: 6px 14px; background: #667eea; color: #fff; border: none; border-radius: 6px; cursor: pointer;
+}
+.producto-card button:hover { background: #5a67d8; }
+
+/* Carrito flotante */
+.cart-sidebar { display: none; }
+.cart-panel {
+  position: fixed; top: 0; right: 0; width: 380px; height: 100vh; background: #fff;
+  box-shadow: -4px 0 20px rgba(0,0,0,0.1); padding: 24px; overflow-y: auto; z-index: 100;
+}
+.cart-panel h3 { margin-bottom: 16px; }
+.cart-panel .cart-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
+.cart-panel .cart-total { font-weight: 700; font-size: 18px; margin-top: 16px; text-align: right; }
+.cart-panel select, .cart-panel input { width: 100%; padding: 10px; margin-bottom: 12px; border: 1px solid #ddd; border-radius: 8px; }
+.cart-panel button {
+  width: 100%; padding: 12px; background: #38a169; color: #fff; border: none; border-radius: 8px;
+  font-size: 16px; cursor: pointer; margin-bottom: 8px;
+}
+.cart-panel button:hover { background: #2f855a; }
+.cart-panel .close-cart { background: #e53e3e; }
+.cart-panel .close-cart:hover { background: #c53030; }
+.cart-fab {
+  position: fixed; top: 24px; right: 24px; width: 56px; height: 56px; border-radius: 50%;
+  background: #667eea; color: #fff; border: none; font-size: 24px; cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 99;
+}
+.cart-fab .badge {
+  position: absolute; top: -4px; right: -4px; background: #e53e3e; color: #fff;
+  border-radius: 50%; width: 22px; height: 22px; font-size: 12px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* Estados */
+.estado-Pendiente { color: #d69e2e; font-weight: 600; }
+.estado-En\ Camino { color: #667eea; font-weight: 600; }
+.estado-Entregado { color: #38a169; font-weight: 600; }
+.estado-Cancelado { color: #e53e3e; font-weight: 600; }
+
+.hidden { display: none !important; }
+
+/* Toast */
+.toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; }
+.toast {
+  background: #2d3748; color: #fff; padding: 14px 20px; border-radius: 10px;
+  font-size: 14px; box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.7s forwards;
+  display: flex; align-items: center; gap: 10px; min-width: 260px;
+}
+.toast.success { background: #38a169; }
+.toast.error { background: #e53e3e; }
+.toast.info { background: #667eea; }
+@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes fadeOut { from { opacity: 1; } to { opacity: 0; transform: translateX(50px); } }
+
+/* Modal */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200;
+  display: flex; align-items: center; justify-content: center; animation: fadeIn 0.2s;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.modal {
+  background: #fff; border-radius: 14px; padding: 32px; width: 520px; max-width: 90vw;
+  max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  animation: scaleIn 0.2s;
+}
+@keyframes scaleIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.modal h2 { margin-bottom: 20px; font-size: 20px; color: #2d3748; }
+.modal h3 { margin: 16px 0 8px; font-size: 16px; color: #4a5568; }
+.modal label { display: block; font-size: 13px; color: #718096; margin-bottom: 4px; margin-top: 12px; }
+.modal input, .modal select {
+  width: 100%; padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;
+}
+.modal input:focus, .modal select:focus { outline: none; border-color: #667eea; }
+.modal .modal-actions { display: flex; gap: 10px; margin-top: 24px; justify-content: flex-end; }
+.modal .modal-actions button {
+  padding: 10px 24px; border-radius: 8px; border: none; font-size: 14px; cursor: pointer; transition: background 0.2s;
+}
+.modal .modal-actions .btn-primary { background: #667eea; color: #fff; }
+.modal .modal-actions .btn-primary:hover { background: #5a67d8; }
+.modal .modal-actions .btn-danger { background: #e53e3e; color: #fff; }
+.modal .modal-actions .btn-danger:hover { background: #c53030; }
+.modal .modal-actions .btn-secondary { background: #e2e8f0; color: #4a5568; }
+.modal .modal-actions .btn-secondary:hover { background: #cbd5e0; }
+
+/* Detalle pedido en modal */
+.detalle-productos { margin: 12px 0; }
+.detalle-productos table { margin-bottom: 0; }
+.detalle-totales { margin-top: 12px; text-align: right; font-size: 14px; line-height: 1.8; }
+.detalle-totales strong { font-size: 16px; }
+
+/* Botones secuenciales para pedidos */
+.btn-estado {
+  padding: 6px 14px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px;
+  white-space: nowrap; transition: background 0.2s;
+}
+.btn-estado.pendiente { background: #d69e2e; color: #fff; }
+.btn-estado.pendiente:hover { background: #b7791f; }
+.btn-estado.en-camino { background: #667eea; color: #fff; }
+.btn-estado.en-camino:hover { background: #5a67d8; }
+.btn-estado.entregado { background: #38a169; color: #fff; cursor: default; opacity: 0.7; }

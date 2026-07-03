@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Repartidor - App Tienda</title>
+  <link rel="stylesheet" href="/css/estilos.css">
+</head>
+<body>
+  <div class="layout">
+    <nav class="sidebar">
+      <h3>Repartidor</h3>
+      <div class="user-info" id="sidebar-user"></div>
+      <a class="active" data-section="entregas">Entregas</a>
+      <div class="logout"><a id="btn-logout">Cerrar Sesión</a></div>
+    </nav>
+    <div class="main-content">
+      <div class="section active" id="sec-entregas">
+        <h1>Mis Entregas</h1>
+        <table>
+          <thead><tr><th>Boleta</th><th>Cliente</th><th>Dirección</th><th>Total</th><th>Estado</th><th>Acción</th></tr></thead>
+          <tbody id="entregas-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toast-container"></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/repartidor.js"></script>
+</body>
+</html>
