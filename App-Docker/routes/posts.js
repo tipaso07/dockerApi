@@ -125,5 +125,14 @@ router.get('/:id', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
+router.get('/:id/likes', async (req, res) => {
+  try {
+    const likes = await PostLike.find({ postId: req.params.id })
+      .populate('usuarioId', 'nombre avatar')
+      .sort({ fecha: -1 });
+    res.json(likes);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 module.exports = router;

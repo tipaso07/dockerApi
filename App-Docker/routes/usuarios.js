@@ -1,13 +1,32 @@
 const { Router } = require('express');
+const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const Usuario = require('../models/Usuario');
-const { verificarToken, verificarAdmin } = require('../middleware/auth');
+const { verificarToken, verificarAdmin, JWT_SECRET } = require('../middleware/auth');
 
 const router = Router();
 
-router.get('/', verificarToken, verificarAdmin, async (req, res) => {
+router.get('/', async (req, res) => {
   try {
-    const usuarios = await Usuario.find().select('-password').sort({ nombre: 1 });
+    const authHeader = req.headers.authorization;
+    let esAdmin = false;
+
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.split(' ')[1];
+        const decoded = jwt.verify(token, JWT_SECRET);
+        if (decoded.rol === 'Admin') esAdmin = true;
+      } catch (_) {}
+    }
+
+    let query = Usuario.find().sort({ nombre: 1 });
+    if (esAdmin) {
+      query = query.select('-password');
+    } else {
+      query = query.select('nombre avatar bio');
+    }
+
+    const usuarios = await query;
     res.json(usuarios);
   } catch (err) {
     res.status(500).json({ error: err.message });

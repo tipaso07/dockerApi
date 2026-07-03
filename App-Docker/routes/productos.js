@@ -15,6 +15,15 @@ router.get('/', async (req, res) => {
   }
 });
 
+router.get('/categorias', async (req, res) => {
+  try {
+    const categorias = await Producto.distinct('categoria');
+    res.json(categorias.filter(c => c)); // filtra nulls/vacíos
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.get('/:id', async (req, res) => {
   try {
     const producto = await Producto.findById(req.params.id);
