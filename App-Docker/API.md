@@ -14,6 +14,32 @@ Authorization: Bearer <token>
 
 Roles disponibles: `Admin`, `Repartidor`, `Cliente`
 
+### Obtener token de Admin
+
+Haz un POST a `/api/auth/login` con las credenciales por defecto:
+
+```json
+{
+  "email": "admin@delivery.com",
+  "password": "123456"
+}
+```
+
+Respuesta:
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIs...",
+  "usuario": {
+    "id": "...",
+    "nombre": "Admin",
+    "email": "admin@delivery.com",
+    "rol": "Admin"
+  }
+}
+```
+
+Usa el `token` devuelto en todas las rutas que requieran **Admin** o **Token**.
+
 ---
 
 ## Endpoints
