@@ -1,10 +1,10 @@
-const express = require('express');
+const { Router } = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const Usuario = require('../models/Usuario');
 const { JWT_SECRET } = require('../middleware/auth');
 
-const router = express.Router();
+const router = Router();
 
 router.post('/register', async (req, res) => {
   try {
@@ -27,6 +27,7 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
+    //"admin@delivery.com", "password":"123456"
     const usuario = await Usuario.findOne({ email });
     if (!usuario) {
       return res.status(400).json({ error: 'Credenciales inválidas' });

@@ -6,6 +6,9 @@ const UsuarioSchema = new mongoose.Schema({
     password: { type: String, required: true },
     rol: { type: String, default: 'Cliente' },
     fechaRegistro: { type: Date, default: Date.now },
+    bio: { type: String, default: '' },
+    avatar: { type: String, default: '' },
+    fechaNacimiento: { type: Date, default: null },
 
     historialCompras: [
         { type: mongoose.Schema.Types.ObjectId, ref: 'Pedido' }

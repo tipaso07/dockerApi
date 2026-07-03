@@ -1,9 +1,10 @@
-const express = require('express');
+const { Router } = require('express');
 const Post = require('../models/Post');
 const PostLike = require('../models/PostLike');
+const Notificacion = require('../models/Notificacion');
 const { verificarToken } = require('../middleware/auth');
 
-const router = express.Router();
+const router = Router();
 
 // 1. Crear un Post (POST /api/posts)
 router.post('/', verificarToken, async (req, res) => {
@@ -68,13 +69,21 @@ router.post('/:id/like', verificarToken, async (req, res) => {
     const likeExistente = await PostLike.findOne({ postId, usuarioId });
 
     if (likeExistente) {
-      // Si ya existe, quitamos el like (Dislike)
       await PostLike.findByIdAndDelete(likeExistente._id);
       return res.json({ mensaje: 'Like quitado', liked: false });
     } else {
-      // Si no existe, agregamos el like (Like)
       const nuevoLike = new PostLike({ postId, usuarioId });
       await nuevoLike.save();
+
+      if (post.autor.toString() !== usuarioId) {
+        await Notificacion.create({
+          usuarioId: post.autor,
+          tipo: 'like',
+          mensaje: `${req.usuario.nombre} dio like a tu publicación`,
+          referenciaId: postId
+        });
+      }
+
       return res.json({ mensaje: 'Like agregado', liked: true });
     }
   } catch (err) {
@@ -102,6 +111,16 @@ router.delete('/:id', verificarToken, async (req, res) => {
     await PostLike.deleteMany({ postId: req.params.id });
 
     res.json({ mensaje: 'Post eliminado exitosamente' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+router.get('/:id', async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id).populate('autor', 'nombre email');
+    if (!post) return res.status(404).json({ error: 'Post no encontrado' });
+    const likesCount = await PostLike.countDocuments({ postId: post._id });
+    res.json({ ...post.toObject(), likesCount });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

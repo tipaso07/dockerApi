@@ -1,10 +1,10 @@
-const express = require('express');
+const { Router } = require('express');
 const Pedido = require('../models/Pedido');
 const Producto = require('../models/Producto');
 const Usuario = require('../models/Usuario');
 const { verificarToken, verificarAdmin } = require('../middleware/auth');
 
-const router = express.Router();
+const router = Router();
 
 router.post('/', verificarToken, async (req, res) => {
   try {
@@ -132,6 +132,21 @@ router.put('/:id/entregar', verificarToken, async (req, res) => {
     await pedido.save();
     const io = req.app.get('io');
     io.emit('estado_pedido_actualizado', pedido);
+    res.json(pedido);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+router.get('/:id', verificarToken, async (req, res) => {
+  try {
+    const pedido = await Pedido.findById(req.params.id)
+      .populate('clienteId', 'nombre email')
+      .populate('repartidorId', 'nombre');
+    if (!pedido) return res.status(404).json({ error: 'Pedido no encontrado' });
+    // Que solo el admin o el dueño del pedido puedan verlo
+    if (req.usuario.rol !== 'Admin' && pedido.clienteId._id.toString() !== req.usuario.id) {
+      return res.status(403).json({ error: 'No tienes permiso para ver este pedido' });
+    }
     res.json(pedido);
   } catch (err) {
     res.status(500).json({ error: err.message });
