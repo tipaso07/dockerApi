@@ -53,6 +53,16 @@ router.get('/', async (req, res) => {
   }
 });
 
+router.get('/:id/likes', async (req, res) => {
+  try {
+    const likes = await PostLike.find({ postId: req.params.id })
+      .populate('usuarioId', 'nombre avatar')
+      .sort({ fecha: -1 });
+    res.json(likes);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 // 3. Dar o quitar Like a un Post (POST /api/posts/:id/like)
 router.post('/:id/like', verificarToken, async (req, res) => {
   try {
@@ -121,16 +131,6 @@ router.get('/:id', async (req, res) => {
     if (!post) return res.status(404).json({ error: 'Post no encontrado' });
     const likesCount = await PostLike.countDocuments({ postId: post._id });
     res.json({ ...post.toObject(), likesCount });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-router.get('/:id/likes', async (req, res) => {
-  try {
-    const likes = await PostLike.find({ postId: req.params.id })
-      .populate('usuarioId', 'nombre avatar')
-      .sort({ fecha: -1 });
-    res.json(likes);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
