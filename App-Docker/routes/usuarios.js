@@ -24,6 +24,19 @@ router.get('/perfil', verificarToken, async (req, res) => {
   }
 });
 
+router.put('/perfil', verificarToken, async (req, res) => {
+  try {
+    const { bio } = req.body;
+    const update = {};
+    if (bio !== undefined) update.bio = bio;
+    const usuario = await Usuario.findByIdAndUpdate(req.usuario.id, update, { new: true }).select('-password');
+    if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
+    res.json(usuario);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.get('/:id', async (req, res) => {
   try {
     const usuario = await Usuario.findById(req.params.id).select('-password');

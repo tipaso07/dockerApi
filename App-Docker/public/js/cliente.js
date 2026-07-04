@@ -313,7 +313,8 @@ async function cargarMiPerfil() {
     <div class="profile-card">
       <div class="profile-avatar">${(perfil.nombre || 'U')[0].toUpperCase()}</div>
       <h2>${perfil.nombre}</h2>
-      <p class="profile-bio">${perfil.bio || 'Sin biografía'}</p>
+      <textarea id="edit-bio" class="profile-bio-input" rows="2" placeholder="Escribe tu biografía...">${perfil.bio || ''}</textarea>
+      <button id="btn-guardar-bio" class="btn-link" style="margin-bottom:12px;">Guardar biografía</button>
       <div class="profile-stats">
         <div class="stat"><strong>${seguidores.length}</strong> seguidores</div>
         <div class="stat"><strong>${siguiendo.length}</strong> siguiendo</div>
@@ -324,6 +325,15 @@ async function cargarMiPerfil() {
     <h3 style="margin-top:24px;">Mis Posts</h3>
     <div id="perfil-posts"></div>
   `;
+
+  document.getElementById('btn-guardar-bio').addEventListener('click', async () => {
+    const bio = document.getElementById('edit-bio').value.trim();
+    await apiFetch('/usuarios/perfil', {
+      method: 'PUT',
+      body: JSON.stringify({ bio })
+    });
+    mostrarToast('Biografía guardada', 'success');
+  });
   const posts = await apiFetch('/posts');
   const misPosts = posts.filter(p => p.autor?._id === perfil._id);
   const postsContainer = document.getElementById('perfil-posts');
