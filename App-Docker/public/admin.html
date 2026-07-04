@@ -120,6 +120,15 @@
         <option value="Admin">Administrador</option>
         <option value="Repartidor">Repartidor</option>
       </select>
+      <label style="margin-top:12px;">Zona (solo repartidores)</label>
+      <select id="edit-user-zona">
+        <option value="">Sin zona</option>
+        <option value="Norte">Norte</option>
+        <option value="Sur">Sur</option>
+        <option value="Este">Este</option>
+        <option value="Oeste">Oeste</option>
+        <option value="Centro">Centro</option>
+      </select>
       <label>Nueva contraseña (dejar vacío para mantener)</label>
       <input type="password" id="edit-user-password" placeholder="••••••••">
       <div class="modal-actions">
@@ -143,6 +152,15 @@
         <option value="Cliente">Cliente</option>
         <option value="Repartidor">Repartidor</option>
         <option value="Admin">Administrador</option>
+      </select>
+      <label style="margin-top:12px;">Zona (solo repartidores)</label>
+      <select id="add-user-zona">
+        <option value="">Sin zona</option>
+        <option value="Norte">Norte</option>
+        <option value="Sur">Sur</option>
+        <option value="Este">Este</option>
+        <option value="Oeste">Oeste</option>
+        <option value="Centro">Centro</option>
       </select>
       <div class="modal-actions">
         <button class="btn-secondary" onclick="cerrarModal('modal-agregar-usuario')">Cancelar</button>
@@ -208,6 +226,15 @@
         <option value="Entregado">Entregado</option>
         <option value="Cancelado">Cancelado</option>
       </select>
+      <label>Zona de entrega</label>
+      <select id="edit-pedido-zona">
+        <option value="">Sin zona</option>
+        <option value="Norte">Norte</option>
+        <option value="Sur">Sur</option>
+        <option value="Este">Este</option>
+        <option value="Oeste">Oeste</option>
+        <option value="Centro">Centro</option>
+      </select>
       <label>Repartidor asignado</label>
       <select id="edit-pedido-repartidor">
         <option value="">Sin asignar</option>
@@ -230,6 +257,9 @@
         mostrarToast(`¡Nuevo pedido! ${pedido.boleta.numeroBoleta} - S/. ${pedido.boleta.montoTotal.toFixed(2)}`, 'info');
         cargarPedidos();
       }
+    });
+    socket.on('estado_pedido_actualizado', () => {
+      if (usuario?.rol === 'Admin') cargarPedidos();
     });
   </script>
 </body>

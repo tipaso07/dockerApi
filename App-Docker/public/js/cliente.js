@@ -111,6 +111,7 @@ document.getElementById('btn-realizar-pedido').addEventListener('click', async (
   if (carrito.length === 0) return mostrarToast('Carrito vacío', 'error');
   const metodoPago = document.getElementById('cart-metodo-pago').value;
   const direccionEntrega = document.getElementById('cart-direccion').value;
+  const zonaEntrega = document.getElementById('cart-zona').value;
   if (!direccionEntrega) return mostrarToast('Ingresa una dirección de entrega', 'error');
 
   try {
@@ -119,7 +120,8 @@ document.getElementById('btn-realizar-pedido').addEventListener('click', async (
       body: JSON.stringify({
         productosCarrito: carrito,
         metodoPago,
-        direccionEntrega
+        direccionEntrega,
+        zonaEntrega
       })
     });
     reproducirSonido();
@@ -128,6 +130,7 @@ document.getElementById('btn-realizar-pedido').addEventListener('click', async (
     actualizarCarritoUI();
     document.getElementById('cart-panel').classList.add('hidden');
     document.getElementById('cart-direccion').value = '';
+    document.getElementById('cart-zona').value = '';
     cargarMisPedidos();
   } catch (err) {
     mostrarToast('Error: ' + err.message, 'error');
@@ -202,10 +205,10 @@ async function cargarFeed() {
 
     return `
       <div class="feed-card">
-        <div class="feed-header">
+          <div class="feed-header">
           <div class="feed-avatar">${(p.autor?.nombre || 'U')[0].toUpperCase()}</div>
           <div class="feed-author">
-            <strong>${p.autor?.nombre || 'Usuario'}</strong>
+            <strong class="feed-username" onclick="verPerfilUsuario('${p.autor?._id || ''}')" style="cursor:pointer;">${p.autor?.nombre || 'Usuario'}</strong>
             <span class="feed-date">${new Date(p.fecha).toLocaleString()}</span>
           </div>
           ${p.autor?._id !== usuario.id ? `<button class="feed-ver-perfil" onclick="verPerfilUsuario('${p.autor?._id}')">Ver perfil</button>` : ''}
@@ -350,8 +353,8 @@ async function verPerfilUsuario(userId) {
         <h2>${perfil.nombre}</h2>
         <p class="profile-bio">${perfil.bio || 'Sin biografía'}</p>
         <div class="profile-stats">
-          <div class="stat"><strong>${seguidores.length}</strong> seguidores</div>
-          <div class="stat"><strong>${siguiendo.length}</strong> siguiendo</div>
+          <div class="stat clickable-stat" onclick="abrirListaUsuarios('${userId}', 'seguidores')"><strong>${seguidores.length}</strong> seguidores</div>
+          <div class="stat clickable-stat" onclick="abrirListaUsuarios('${userId}', 'siguiendo')"><strong>${siguiendo.length}</strong> siguiendo</div>
         </div>
         <button class="follow-btn ${estadoFollow.siguiendo ? 'following' : ''}" onclick="toggleFollowUsuario('${userId}', this)">
           ${estadoFollow.siguiendo ? 'Siguiendo' : '+ Seguir'}
@@ -381,6 +384,28 @@ async function toggleFollowUsuario(userId, btn) {
   } catch (err) {
     mostrarToast('Error: ' + err.message, 'error');
   }
+}
+
+// ===================== LISTA USUARIOS (seguidores/siguiendo) =====================
+
+async function abrirListaUsuarios(userId, tipo) {
+  const usuarios = await apiFetch(`/seguidores/${userId}/${tipo}`);
+  const lista = document.getElementById('lista-usuarios-body');
+  if (usuarios.length === 0) {
+    lista.innerHTML = '<tr><td colspan="2" style="color:#a0aec0;text-align:center;">Sin usuarios</td></tr>';
+  } else {
+    lista.innerHTML = usuarios.map(u => `
+      <tr style="cursor:pointer;" onclick="verPerfilUsuario('${u._id}');cerrarModal('modal-lista-usuarios')">
+        <td><div class="user-list-avatar">${(u.nombre || 'U')[0].toUpperCase()}</div></td>
+        <td>
+          <strong>${u.nombre}</strong>
+          <br><small style="color:#a0aec0;">${u.email || ''}</small>
+        </td>
+      </tr>
+    `).join('');
+  }
+  document.getElementById('lista-usuarios-titulo').textContent = tipo === 'seguidores' ? 'Seguidores' : 'Siguiendo';
+  abrirModal('modal-lista-usuarios');
 }
 
 // ===================== NOTIFICACIONES =====================
@@ -439,6 +464,50 @@ socketClient.on('nueva_notificacion', () => {
   cargarNotificaciones();
 });
 
+// ===================== MAPA DIRECCIÓN =====================
+
+let map, marker;
+
+function initMapaDireccion() {
+  const defaultPos = [-12.0464, -77.0428];
+  map = L.map('mapa-direccion').setView(defaultPos, 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
+
+  marker = L.marker(defaultPos, { draggable: true }).addTo(map);
+
+  map.on('click', async (e) => {
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${e.latlng.lat}&lon=${e.latlng.lng}&addressdetails=1&accept-language=es`);
+    const data = await res.json();
+    document.getElementById('cart-direccion').value = data.display_name || `${e.latlng.lat}, ${e.latlng.lng}`;
+    marker.setLatLng(e.latlng);
+  });
+
+  marker.on('dragend', async () => {
+    const pos = marker.getLatLng();
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.lat}&lon=${pos.lng}&addressdetails=1&accept-language=es`);
+    const data = await res.json();
+    document.getElementById('cart-direccion').value = data.display_name || `${pos.lat}, ${pos.lng}`;
+  });
+}
+
+let timeoutMapa;
+document.getElementById('cart-direccion').addEventListener('input', function () {
+  clearTimeout(timeoutMapa);
+  const val = this.value.trim();
+  if (val.length < 5) return;
+  timeoutMapa = setTimeout(async () => {
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(val)}&limit=1&accept-language=es`);
+    const data = await res.json();
+    if (data.length > 0) {
+      const coords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+      map.setView(coords, 15);
+      marker.setLatLng(coords);
+    }
+  }, 800);
+});
+
 // ===================== INIT =====================
 
 cargarProductos();
@@ -447,3 +516,4 @@ cargarFeed();
 cargarMiPerfil();
 cargarNotificaciones();
 setInterval(cargarNotificaciones, 30000);
+initMapaDireccion();

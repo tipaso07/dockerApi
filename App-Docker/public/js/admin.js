@@ -27,9 +27,9 @@ async function cargarPedidos() {
   tbody.innerHTML = todosPedidos.map(p => {
     let btnAccion = '';
     if (p.estado === 'Pendiente') {
-      btnAccion = `<button class="btn-accion-estado" data-id="${p._id}" data-estado="En Camino">→ En Camino</button>`;
+      btnAccion = `<button class="btn-accion-estado" data-id="${p._id}" data-estado="En Camino" data-zona="${p.zonaEntrega || ''}">→ En Camino</button>`;
     } else if (p.estado === 'En Camino') {
-      btnAccion = `<button class="btn-accion-estado" data-id="${p._id}" data-estado="Entregado">→ Entregado</button>`;
+      btnAccion = `<button class="btn-accion-estado" data-id="${p._id}" data-estado="Entregado" data-zona="${p.zonaEntrega || ''}">→ Entregado</button>`;
     } else if (p.estado === 'Entregado') {
       btnAccion = `<button class="btn-accion-estado" disabled>✓ Entregado</button>`;
     } else {
@@ -53,9 +53,11 @@ async function cargarPedidos() {
     btn.addEventListener('click', async () => {
       const id = btn.dataset.id;
       const estado = btn.dataset.estado;
+      const body = { estado };
+      if (btn.dataset.zona) body.zonaEntrega = btn.dataset.zona;
       await apiFetch(`/pedidos/${id}/estado`, {
         method: 'PUT',
-        body: JSON.stringify({ estado })
+        body: JSON.stringify(body)
       });
       cargarPedidos();
     });
@@ -76,12 +78,13 @@ async function abrirEditarPedido(id) {
   document.getElementById('edit-pedido-igv').textContent = pedido.boleta.igv.toFixed(2);
   document.getElementById('edit-pedido-total').textContent = pedido.boleta.montoTotal.toFixed(2);
   document.getElementById('edit-pedido-estado').value = pedido.estado;
+  document.getElementById('edit-pedido-zona').value = pedido.zonaEntrega || '';
 
   const repSelect = document.getElementById('edit-pedido-repartidor');
   const usuarios = await apiFetch('/usuarios');
   const repartidores = usuarios.filter(u => u.rol === 'Repartidor');
   repSelect.innerHTML = '<option value="">Sin asignar</option>' +
-    repartidores.map(r => `<option value="${r._id}">${r.nombre}</option>`).join('');
+    repartidores.map(r => `<option value="${r._id}" ${r.zona ? `data-zona="${r.zona}"` : ''}>${r.nombre}${r.zona ? ' [' + r.zona + ']' : ''}</option>`).join('');
   repSelect.value = pedido.repartidorId?._id || '';
 
   abrirModal('modal-editar-pedido');
@@ -100,18 +103,16 @@ document.getElementById('btn-guardar-pedido').addEventListener('click', async ()
   const id = document.getElementById('edit-pedido-id').value;
   const estado = document.getElementById('edit-pedido-estado').value;
   const repartidorId = document.getElementById('edit-pedido-repartidor').value;
+  const zonaEntrega = document.getElementById('edit-pedido-zona').value;
+
+  const body = { estado };
+  if (repartidorId) body.repartidorId = repartidorId;
+  if (zonaEntrega) body.zonaEntrega = zonaEntrega;
 
   await apiFetch(`/pedidos/${id}/estado`, {
     method: 'PUT',
-    body: JSON.stringify({ estado })
+    body: JSON.stringify(body)
   });
-
-  if (repartidorId) {
-    await apiFetch(`/pedidos/${id}/repartidor`, {
-      method: 'PUT',
-      body: JSON.stringify({ repartidorId })
-    });
-  }
 
   cerrarModal('modal-editar-pedido');
   mostrarToast('Pedido actualizado', 'success');
@@ -195,10 +196,10 @@ async function cargarUsuarios() {
     <tr>
       <td>${u.nombre}</td>
       <td>${u.email}</td>
-      <td>${u.rol}</td>
+      <td>${u.rol}${u.zona ? ' [' + u.zona + ']' : ''}</td>
       <td>${new Date(u.fechaRegistro).toLocaleDateString()}</td>
       <td>
-        <button class="btn-editar-user" data-id="${u._id}" data-nombre="${u.nombre}" data-email="${u.email}" data-rol="${u.rol}">Editar</button>
+        <button class="btn-editar-user" data-id="${u._id}" data-nombre="${u.nombre}" data-email="${u.email}" data-rol="${u.rol}" data-zona="${u.zona || ''}">Editar</button>
         <button class="btn-eliminar-user danger" data-id="${u._id}">Eliminar</button>
       </td>
     </tr>
@@ -210,6 +211,7 @@ async function cargarUsuarios() {
       document.getElementById('edit-user-nombre').value = btn.dataset.nombre;
       document.getElementById('edit-user-email').value = btn.dataset.email;
       document.getElementById('edit-user-rol').value = btn.dataset.rol;
+      document.getElementById('edit-user-zona').value = btn.dataset.zona || '';
       document.getElementById('edit-user-password').value = '';
       abrirModal('modal-editar-usuario');
     });
@@ -231,6 +233,7 @@ document.getElementById('btn-guardar-usuario').addEventListener('click', async (
     nombre: document.getElementById('edit-user-nombre').value,
     email: document.getElementById('edit-user-email').value,
     rol: document.getElementById('edit-user-rol').value,
+    zona: document.getElementById('edit-user-zona').value,
   };
   const password = document.getElementById('edit-user-password').value;
   if (password) data.password = password;
@@ -245,15 +248,17 @@ document.getElementById('btn-guardar-nuevo-usuario').addEventListener('click', a
   const email = document.getElementById('add-user-email').value;
   const password = document.getElementById('add-user-password').value;
   const rol = document.getElementById('add-user-rol').value;
+  const zona = document.getElementById('add-user-zona').value;
   if (!nombre || !email || !password) return mostrarToast('Completa todos los campos', 'error');
   await apiFetch('/auth/register', {
     method: 'POST',
-    body: JSON.stringify({ nombre, email, password, rol })
+    body: JSON.stringify({ nombre, email, password, rol, zona })
   });
   cerrarModal('modal-agregar-usuario');
   document.getElementById('add-user-nombre').value = '';
   document.getElementById('add-user-email').value = '';
   document.getElementById('add-user-password').value = '';
+  document.getElementById('add-user-zona').value = '';
   mostrarToast('Usuario creado', 'success');
   cargarUsuarios();
 });

@@ -24,7 +24,12 @@ const PedidoSchema = new mongoose.Schema({
     },
 
     repartidorId: { type: mongoose.Schema.Types.ObjectId, ref: 'Usuario', default: null, index: true },
-    direccionEntrega: { type: String, required: true }
+    direccionEntrega: { type: String, required: true },
+    zonaEntrega: {
+        type: String,
+        enum: ['', 'Norte', 'Sur', 'Este', 'Oeste', 'Centro'],
+        default: ''
+    }
 });
 
 PedidoSchema.index({ clienteId: 1 });

@@ -8,8 +8,11 @@ const UsuarioSchema = new mongoose.Schema({
     fechaRegistro: { type: Date, default: Date.now },
     bio: { type: String, default: '' },
     avatar: { type: String, default: '' },
-    fechaNacimiento: { type: Date, default: null },
-
+    zona: {
+        type: String,
+        enum: ['', 'Norte', 'Sur', 'Este', 'Oeste', 'Centro'],
+        default: ''
+    },
     historialCompras: [
         { type: mongoose.Schema.Types.ObjectId, ref: 'Pedido' }
     ]

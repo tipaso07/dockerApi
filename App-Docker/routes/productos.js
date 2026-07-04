@@ -1,8 +1,8 @@
-const { Router } = require('express');
+const express = require('express');
 const Producto = require('../models/Producto');
 const { verificarToken, verificarAdmin } = require('../middleware/auth');
 
-const router = Router();
+const router = express.Router();
 
 router.get('/', async (req, res) => {
   try {
@@ -10,15 +10,6 @@ router.get('/', async (req, res) => {
     const filter = categoria ? { categoria } : {};
     const productos = await Producto.find(filter).sort({ nombre: 1 });
     res.json(productos);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-router.get('/categorias', async (req, res) => {
-  try {
-    const categorias = await Producto.distinct('categoria');
-    res.json(categorias.filter(c => c)); // filtra nulls/vacíos
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

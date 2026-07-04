@@ -25,7 +25,7 @@ async function cargarEntregas() {
         <td>${p.clienteId?.nombre || 'N/A'}</td>
         <td>${p.direccionEntrega}</td>
         <td>S/. ${p.boleta.montoTotal.toFixed(2)}</td>
-        <td class="estado-${p.estado.replace(/\s/g, '\\ ')}">${p.estado}</td>
+        <td class="estado-${p.estado.replace(/\s/g, '-')}">${p.estado}</td>
         <td>${btn}</td>
       </tr>
     `;
@@ -40,14 +40,14 @@ async function marcarEntregado(id) {
 
 const socket = io();
 socket.on('alerta_nuevo_pedido', (pedido) => {
-  if (pedido.repartidorId === usuario.id) {
+  if (pedido.repartidorId === usuario.id || pedido.repartidorId?._id === usuario.id) {
     reproducirSonido();
     mostrarToast(`Nueva entrega asignada: ${pedido.boleta.numeroBoleta}`, 'info');
     cargarEntregas();
   }
 });
 socket.on('estado_pedido_actualizado', (pedido) => {
-  if (pedido.repartidorId === usuario.id) {
+  if (pedido.repartidorId === usuario.id || pedido.repartidorId?._id === usuario.id) {
     reproducirSonido();
     mostrarToast(`Pedido ${pedido.boleta.numeroBoleta} actualizado a: ${pedido.estado}`, 'info');
     cargarEntregas();

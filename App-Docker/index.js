@@ -8,10 +8,10 @@ const authRoutes = require('./routes/auth');
 const productoRoutes = require('./routes/productos');
 const pedidoRoutes = require('./routes/pedidos');
 const usuarioRoutes = require('./routes/usuarios');
+const notificacionRoutes = require('./routes/notificaciones');
 const postRoutes = require('./routes/posts');
 const comentarioRoutes = require('./routes/comentarios');
 const seguidorRoutes = require('./routes/seguidores');
-const notificacionRoutes = require('./routes/notificaciones');
 
 const app = express();
 const server = http.createServer(app);
@@ -24,7 +24,7 @@ app.set('io', io);
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27019/mongodb-datos';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/mongodb-datos';
 
 async function conectarMongoConReintentos(maxIntentos = 5) {
     for (let i = 1; i <= maxIntentos; i++) {
@@ -59,10 +59,10 @@ app.use('/api/auth', authRoutes);
 app.use('/api/productos', productoRoutes);
 app.use('/api/pedidos', pedidoRoutes);
 app.use('/api/usuarios', usuarioRoutes);
+app.use('/api/notificaciones', notificacionRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/comentarios', comentarioRoutes);
 app.use('/api/seguidores', seguidorRoutes);
-app.use('/api/notificaciones', notificacionRoutes);
 
 app.get('/api/prueba', (req, res) => {
     res.json({ mensaje: "API funcionando" });

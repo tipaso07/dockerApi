@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tienda - App Tienda</title>
   <link rel="stylesheet" href="/css/estilos.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body>
   <div class="layout">
@@ -91,6 +92,15 @@
       <option value="Efectivo">Efectivo</option>
     </select>
     <input type="text" id="cart-direccion" placeholder="Dirección de entrega">
+    <select id="cart-zona">
+      <option value="">Seleccionar zona</option>
+      <option value="Norte">Norte</option>
+      <option value="Sur">Sur</option>
+      <option value="Este">Este</option>
+      <option value="Oeste">Oeste</option>
+      <option value="Centro">Centro</option>
+    </select>
+    <div id="mapa-direccion" style="height:220px;margin-bottom:12px;border-radius:8px;border:1px solid #ddd;"></div>
     <button id="btn-realizar-pedido">Realizar Pedido</button>
     <button class="close-cart" id="btn-cerrar-carrito">Cerrar</button>
   </div>
@@ -144,6 +154,21 @@
     <div class="modal" id="modal-perfil-content"></div>
   </div>
 
+  <!-- Modal Lista Usuarios (seguidores/siguiendo) -->
+  <div class="modal-overlay hidden" id="modal-lista-usuarios">
+    <div class="modal">
+      <h2 id="lista-usuarios-titulo">Usuarios</h2>
+      <table>
+        <thead><tr><th></th><th>Usuario</th></tr></thead>
+        <tbody id="lista-usuarios-body"></tbody>
+      </table>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="cerrarModal('modal-lista-usuarios')">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script src="/js/auth.js"></script>
   <script src="/js/cliente.js"></script>
