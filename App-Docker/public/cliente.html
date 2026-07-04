@@ -91,7 +91,8 @@
       <option value="Tarjeta">Tarjeta</option>
       <option value="Efectivo">Efectivo</option>
     </select>
-    <input type="text" id="cart-direccion" placeholder="Dirección de entrega">
+    <input type="text" id="cart-direccion" placeholder="Dirección de entrega" autocomplete="off">
+    <div id="cart-sugerencias" class="sugerencias-dropdown"></div>
     <div id="mapa-direccion" style="height:220px;margin-bottom:12px;border-radius:8px;border:1px solid #ddd;"></div>
     <p id="cart-ubicacion-info" style="font-size:12px;color:#718096;margin-bottom:12px;"></p>
     <button id="btn-realizar-pedido">Realizar Pedido</button>
@@ -157,6 +158,18 @@
       </table>
       <div class="modal-actions">
         <button class="btn-secondary" onclick="cerrarModal('modal-lista-usuarios')">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Editar Biografía -->
+  <div class="modal-overlay hidden" id="modal-editar-bio">
+    <div class="modal">
+      <h2>Editar biografía</h2>
+      <textarea id="edit-bio-textarea" rows="3" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:14px;font-family:inherit;resize:vertical;"></textarea>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="cerrarModal('modal-editar-bio')">Cancelar</button>
+        <button class="btn-primary" id="btn-guardar-bio-modal">Guardar</button>
       </div>
     </div>
   </div>

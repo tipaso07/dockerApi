@@ -269,12 +269,20 @@ tr:hover { background: #f7fafc; }
 }
 .profile-email { font-size: 13px; color: #a0aec0; }
 .profile-date { font-size: 12px; color: #a0aec0; margin-top: 4px; }
-.profile-bio-input {
-  width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px;
-  font-size: 14px; font-family: inherit; resize: vertical; margin-bottom: 8px;
-  text-align: center;
+
+.sugerencias-dropdown {
+  background: #fff; border: 1px solid #ddd; border-radius: 8px;
+  max-height: 180px; overflow-y: auto; margin-bottom: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  display: none;
 }
-.profile-bio-input:focus { outline: none; border-color: #667eea; }
+.sugerencias-dropdown:empty { display: none; }
+.sugerencias-dropdown:has(div) { display: block; }
+.sugerencias-dropdown div {
+  padding: 10px 14px; font-size: 13px; cursor: pointer; border-bottom: 1px solid #f0f0f0;
+}
+.sugerencias-dropdown div:last-child { border-bottom: none; }
+.sugerencias-dropdown div:hover { background: #f7fafc; color: #667eea; }
 
 .follow-btn {
   padding: 10px 24px; border-radius: 8px; border: 2px solid #667eea;

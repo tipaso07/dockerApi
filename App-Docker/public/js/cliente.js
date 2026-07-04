@@ -101,6 +101,7 @@ function eliminarDelCarrito(idx) {
 
 document.getElementById('cart-fab').addEventListener('click', () => {
   document.getElementById('cart-panel').classList.remove('hidden');
+  setTimeout(() => { if (map) map.invalidateSize(); }, 100);
 });
 
 document.getElementById('btn-cerrar-carrito').addEventListener('click', () => {
@@ -313,8 +314,8 @@ async function cargarMiPerfil() {
     <div class="profile-card">
       <div class="profile-avatar">${(perfil.nombre || 'U')[0].toUpperCase()}</div>
       <h2>${perfil.nombre}</h2>
-      <textarea id="edit-bio" class="profile-bio-input" rows="2" placeholder="Escribe tu biografía...">${perfil.bio || ''}</textarea>
-      <button id="btn-guardar-bio" class="btn-link" style="margin-bottom:12px;">Guardar biografía</button>
+      <p class="profile-bio">${perfil.bio || 'Sin biografía'}</p>
+      <button id="btn-editar-bio" class="btn-link" style="margin-bottom:12px;">Editar biografía</button>
       <div class="profile-stats">
         <div class="stat"><strong>${seguidores.length}</strong> seguidores</div>
         <div class="stat"><strong>${siguiendo.length}</strong> siguiendo</div>
@@ -326,13 +327,9 @@ async function cargarMiPerfil() {
     <div id="perfil-posts"></div>
   `;
 
-  document.getElementById('btn-guardar-bio').addEventListener('click', async () => {
-    const bio = document.getElementById('edit-bio').value.trim();
-    await apiFetch('/usuarios/perfil', {
-      method: 'PUT',
-      body: JSON.stringify({ bio })
-    });
-    mostrarToast('Biografía guardada', 'success');
+  document.getElementById('btn-editar-bio').addEventListener('click', () => {
+    document.getElementById('edit-bio-textarea').value = perfil.bio || '';
+    abrirModal('modal-editar-bio');
   });
   const posts = await apiFetch('/posts');
   const misPosts = posts.filter(p => p.autor?._id === perfil._id);
@@ -348,6 +345,17 @@ async function cargarMiPerfil() {
     `).join('');
   }
 }
+
+document.getElementById('btn-guardar-bio-modal').addEventListener('click', async () => {
+  const bio = document.getElementById('edit-bio-textarea').value.trim();
+  await apiFetch('/usuarios/perfil', {
+    method: 'PUT',
+    body: JSON.stringify({ bio })
+  });
+  cerrarModal('modal-editar-bio');
+  mostrarToast('Biografía guardada', 'success');
+  cargarMiPerfil();
+});
 
 async function verPerfilUsuario(userId) {
   if (!userId) return;
@@ -538,17 +546,37 @@ let timeoutMapa;
 document.getElementById('cart-direccion').addEventListener('input', function () {
   clearTimeout(timeoutMapa);
   const val = this.value.trim();
-  if (val.length < 5) return;
+  if (val.length < 4) {
+    document.getElementById('cart-sugerencias').innerHTML = '';
+    return;
+  }
   timeoutMapa = setTimeout(async () => {
-    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(val)},Perú&limit=1&accept-language=es`);
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(val)},Perú&limit=5&accept-language=es`);
     const data = await res.json();
-    if (data.length > 0) {
-      const coords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
-      map.setView(coords, 15);
-      marker.setLatLng(coords);
-      reverseGeocode(coords[0], coords[1]);
+    const dropdown = document.getElementById('cart-sugerencias');
+    if (data.length === 0) {
+      dropdown.innerHTML = '';
+      return;
     }
-  }, 800);
+    dropdown.innerHTML = data.map(item => {
+      const name = item.display_name.split(', ').slice(0, 4).join(', ');
+      return `<div data-lat="${item.lat}" data-lng="${item.lon}">📍 ${name}</div>`;
+    }).join('');
+    dropdown.querySelectorAll('div').forEach(el => {
+      el.addEventListener('click', () => {
+        const lat = parseFloat(el.dataset.lat);
+        const lng = parseFloat(el.dataset.lng);
+        map.setView([lat, lng], 15);
+        marker.setLatLng([lat, lng]);
+        reverseGeocode(lat, lng);
+        dropdown.innerHTML = '';
+      });
+    });
+  }, 400);
+});
+
+document.getElementById('cart-direccion').addEventListener('blur', () => {
+  setTimeout(() => { document.getElementById('cart-sugerencias').innerHTML = ''; }, 300);
 });
 
 // ===================== INIT =====================
