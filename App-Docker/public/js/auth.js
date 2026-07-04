@@ -85,7 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const nombre = document.getElementById('reg-nombre').value;
         const data = await apiFetch('/auth/register', {
           method: 'POST',
-          body: JSON.stringify({ nombre, email, password, rol: 'Cliente' })
+          body: JSON.stringify({ nombre, email, password, rol: document.getElementById('reg-rol').value })
         });
         guardarSesion(data.token, data.usuario);
       } else {

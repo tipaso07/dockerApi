@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Iniciar Sesión - App Tienda</title>
+  <title>QuickStack - Iniciar Sesión</title>
   <link rel="stylesheet" href="/css/estilos.css">
 </head>
 <body>
@@ -14,6 +14,10 @@
       <form id="auth-form">
         <div id="name-field" class="hidden">
           <input type="text" id="reg-nombre" placeholder="Nombre completo">
+          <select id="reg-rol">
+            <option value="Cliente">Cliente</option>
+            <option value="Repartidor">Repartidor</option>
+          </select>
         </div>
         <input type="email" id="auth-email" placeholder="Correo electrónico" required>
         <input type="password" id="auth-password" placeholder="Contraseña" required>
