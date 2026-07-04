@@ -30,6 +30,7 @@ router.post('/', verificarToken, async (req, res) => {
         mensaje: `${req.usuario.nombre} comentó en tu publicación`,
         referenciaId: postId
       });
+      req.app.get('io').emit('nueva_notificacion', { usuarioId: post.autor });
     }
 
     res.status(201).json(commentPoblado);
@@ -81,6 +82,7 @@ router.delete('/:id', verificarToken, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 router.get('/:id', async (req, res) => {
   try {
     const comment = await Comment.findById(req.params.id)
@@ -92,6 +94,7 @@ router.get('/:id', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 router.get('/', verificarToken, async (req, res) => {
   try {
     const comentarios = await Comment.find()
@@ -103,4 +106,5 @@ router.get('/', verificarToken, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 module.exports = router;

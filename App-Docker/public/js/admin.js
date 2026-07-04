@@ -43,7 +43,7 @@ async function cargarPedidos() {
         <td>S/. ${p.boleta.montoTotal.toFixed(2)}</td>
         <td>${p.metodoPago}</td>
         <td>${new Date(p.fecha).toLocaleDateString()}</td>
-        <td class="estado-${p.estado.replace(/\s/g, '\\ ')}">${p.estado}</td>
+        <td class="estado-${p.estado.replace(/\s/g, '-')}">${p.estado}</td>
         <td>${btnAccion} <button onclick='abrirEditarPedido("${p._id}")'>Editar</button></td>
       </tr>
     `;

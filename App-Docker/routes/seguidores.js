@@ -34,6 +34,7 @@ router.post('/:id/seguir', verificarToken, async (req, res) => {
         mensaje: `${req.usuario.nombre} empezó a seguirte`,
         referenciaId: seguidorId
       });
+      req.app.get('io').emit('nueva_notificacion', { usuarioId: seguidoId });
 
       return res.json({ mensaje: 'Ahora sigues a este usuario', siguiendo: true });
     }

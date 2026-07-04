@@ -145,7 +145,7 @@ async function cargarMisPedidos() {
       <td>${p.direccionEntrega}</td>
       <td>${p.repartidorId?.nombre || 'Sin asignar'}</td>
       <td>${new Date(p.fecha).toLocaleDateString()}</td>
-      <td class="estado-${p.estado.replace(/\s/g, '\\ ')}">${p.estado}</td>
+      <td class="estado-${p.estado.replace(/\s/g, '-')}">${p.estado}</td>
       <td>
         <button onclick="verDetallePedido('${p._id}')">Ver</button>
       </td>
@@ -154,12 +154,11 @@ async function cargarMisPedidos() {
 }
 
 function verDetallePedido(id) {
-  apiFetch('/pedidos').then(pedidos => {
-    const p = pedidos.find(x => x._id === id);
+  apiFetch('/pedidos/' + id).then(p => {
     if (!p) return;
     document.getElementById('detalle-boleta').textContent = `Boleta: ${p.boleta.numeroBoleta}`;
     document.getElementById('detalle-fecha').textContent = `Fecha: ${new Date(p.fecha).toLocaleString()}`;
-    document.getElementById('detalle-estado').innerHTML = `<strong>Estado:</strong> <span class="estado-${p.estado.replace(/\s/g, '\\ ')}">${p.estado}</span>`;
+    document.getElementById('detalle-estado').innerHTML = `<strong>Estado:</strong> <span class="estado-${p.estado.replace(/\s/g, '-')}">${p.estado}</span>`;
     document.getElementById('detalle-productos-tbody').innerHTML = p.boleta.productos.map(pr => `
       <tr>
         <td>${pr.nombre}</td>

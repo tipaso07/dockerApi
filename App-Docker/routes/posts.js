@@ -6,7 +6,6 @@ const { verificarToken } = require('../middleware/auth');
 
 const router = Router();
 
-// 1. Crear un Post (POST /api/posts)
 router.post('/', verificarToken, async (req, res) => {
   try {
     const { contenido } = req.body;
@@ -20,8 +19,7 @@ router.post('/', verificarToken, async (req, res) => {
     });
 
     const postGuardado = await nuevoPost.save();
-    
-    // Devolvemos el post poblado con el autor
+
     const postPoblado = await Post.findById(postGuardado._id).populate('autor', 'nombre email');
     res.status(201).json(postPoblado);
   } catch (err) {
@@ -29,14 +27,12 @@ router.post('/', verificarToken, async (req, res) => {
   }
 });
 
-// 2. Listar todos los Posts (GET /api/posts)
 router.get('/', async (req, res) => {
   try {
     const posts = await Post.find()
       .populate('autor', 'nombre email')
       .sort({ fecha: -1 });
 
-    // Para cada post, contamos la cantidad de likes en la colección post_likes
     const postsConLikes = await Promise.all(
       posts.map(async (post) => {
         const likesCount = await PostLike.countDocuments({ postId: post._id });
@@ -63,19 +59,17 @@ router.get('/:id/likes', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-// 3. Dar o quitar Like a un Post (POST /api/posts/:id/like)
+
 router.post('/:id/like', verificarToken, async (req, res) => {
   try {
     const postId = req.params.id;
     const usuarioId = req.usuario.id;
 
-    // Verificar si el post existe
     const post = await Post.findById(postId);
     if (!post) {
       return res.status(404).json({ error: 'Post no encontrado' });
     }
 
-    // Buscar si ya tiene like de este usuario
     const likeExistente = await PostLike.findOne({ postId, usuarioId });
 
     if (likeExistente) {
@@ -92,6 +86,7 @@ router.post('/:id/like', verificarToken, async (req, res) => {
           mensaje: `${req.usuario.nombre} dio like a tu publicación`,
           referenciaId: postId
         });
+        req.app.get('io').emit('nueva_notificacion', { usuarioId: post.autor });
       }
 
       return res.json({ mensaje: 'Like agregado', liked: true });
@@ -101,7 +96,6 @@ router.post('/:id/like', verificarToken, async (req, res) => {
   }
 });
 
-// 4. Eliminar un Post (DELETE /api/posts/:id)
 router.delete('/:id', verificarToken, async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
@@ -109,15 +103,11 @@ router.delete('/:id', verificarToken, async (req, res) => {
       return res.status(404).json({ error: 'Post no encontrado' });
     }
 
-    // Verificar si el usuario que intenta borrar es el autor o es administrador
     if (post.autor.toString() !== req.usuario.id && req.usuario.rol !== 'Admin') {
       return res.status(403).json({ error: 'No tienes permiso para eliminar este post' });
     }
 
-    // Eliminar el post
     await Post.findByIdAndDelete(req.params.id);
-
-    // Eliminar todos los likes asociados a este post
     await PostLike.deleteMany({ postId: req.params.id });
 
     res.json({ mensaje: 'Post eliminado exitosamente' });
@@ -125,6 +115,7 @@ router.delete('/:id', verificarToken, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 router.get('/:id', async (req, res) => {
   try {
     const post = await Post.findById(req.params.id).populate('autor', 'nombre email');
@@ -135,4 +126,5 @@ router.get('/:id', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 module.exports = router;

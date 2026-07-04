@@ -125,7 +125,7 @@ tr:hover { background: #f7fafc; }
 
 /* Estados */
 .estado-Pendiente { color: #d69e2e; font-weight: 600; }
-.estado-En\ Camino { color: #667eea; font-weight: 600; }
+.estado-En-Camino { color: #667eea; font-weight: 600; }
 .estado-Entregado { color: #38a169; font-weight: 600; }
 .estado-Cancelado { color: #e53e3e; font-weight: 600; }
 

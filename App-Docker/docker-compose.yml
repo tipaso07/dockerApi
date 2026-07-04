@@ -27,6 +27,7 @@ services:
         condition: service_healthy
     environment:
       - MONGO_URI=mongodb://base-datos:27017/mongodb-datos
+      - JWT_SECRET=dev_jwt_secret_cambiar_en_produccion
     command: npm run dev
     healthcheck:
       test: [ "CMD", "wget", "--spider", "-q", "http://localhost:3000/api/health" ]
