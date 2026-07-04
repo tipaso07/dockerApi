@@ -107,12 +107,14 @@ document.getElementById('btn-cerrar-carrito').addEventListener('click', () => {
   document.getElementById('cart-panel').classList.add('hidden');
 });
 
+let ubicacionSeleccionada = null;
+
 document.getElementById('btn-realizar-pedido').addEventListener('click', async () => {
   if (carrito.length === 0) return mostrarToast('Carrito vacío', 'error');
   const metodoPago = document.getElementById('cart-metodo-pago').value;
   const direccionEntrega = document.getElementById('cart-direccion').value;
-  const zonaEntrega = document.getElementById('cart-zona').value;
   if (!direccionEntrega) return mostrarToast('Ingresa una dirección de entrega', 'error');
+  if (!ubicacionSeleccionada) return mostrarToast('Selecciona una ubicación en el mapa', 'error');
 
   try {
     await apiFetch('/pedidos', {
@@ -121,7 +123,8 @@ document.getElementById('btn-realizar-pedido').addEventListener('click', async (
         productosCarrito: carrito,
         metodoPago,
         direccionEntrega,
-        zonaEntrega
+        lat: ubicacionSeleccionada.lat,
+        lng: ubicacionSeleccionada.lng
       })
     });
     reproducirSonido();
@@ -130,7 +133,8 @@ document.getElementById('btn-realizar-pedido').addEventListener('click', async (
     actualizarCarritoUI();
     document.getElementById('cart-panel').classList.add('hidden');
     document.getElementById('cart-direccion').value = '';
-    document.getElementById('cart-zona').value = '';
+    document.getElementById('cart-ubicacion-info').textContent = '';
+    ubicacionSeleccionada = null;
     cargarMisPedidos();
   } catch (err) {
     mostrarToast('Error: ' + err.message, 'error');
@@ -467,28 +471,56 @@ socketClient.on('nueva_notificacion', () => {
 // ===================== MAPA DIRECCIÓN =====================
 
 let map, marker;
+const PERU_BOUNDS = [[-18.35, -81.33], [-0.03, -68.65]];
+
+function reverseGeocode(lat, lng) {
+  fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1&accept-language=es`)
+    .then(r => r.json())
+    .then(data => {
+      const countryCode = data.address?.country_code;
+      if (countryCode !== 'pe') {
+        mostrarToast('La ubicación debe estar en Perú', 'error');
+        marker.setLatLng([ubicacionSeleccionada?.lat || -12.0464, ubicacionSeleccionada?.lng || -77.0428]);
+        return;
+      }
+      const direccion = data.display_name || `${lat}, ${lng}`;
+      document.getElementById('cart-direccion').value = direccion;
+      document.getElementById('cart-ubicacion-info').textContent = `📍 ${data.address?.city || data.address?.town || data.address?.village || data.address?.state || ''} • ${data.address?.country || ''}`;
+      ubicacionSeleccionada = { lat, lng };
+    })
+    .catch(() => {
+      document.getElementById('cart-direccion').value = `${lat}, ${lng}`;
+      ubicacionSeleccionada = { lat, lng };
+    });
+}
 
 function initMapaDireccion() {
   const defaultPos = [-12.0464, -77.0428];
-  map = L.map('mapa-direccion').setView(defaultPos, 13);
+  map = L.map('mapa-direccion', {
+    maxBounds: PERU_BOUNDS,
+    maxBoundsViscosity: 1.0,
+    minZoom: 5
+  }).setView(defaultPos, 13);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors'
   }).addTo(map);
 
   marker = L.marker(defaultPos, { draggable: true }).addTo(map);
+  reverseGeocode(defaultPos[0], defaultPos[1]);
 
-  map.on('click', async (e) => {
-    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${e.latlng.lat}&lon=${e.latlng.lng}&addressdetails=1&accept-language=es`);
-    const data = await res.json();
-    document.getElementById('cart-direccion').value = data.display_name || `${e.latlng.lat}, ${e.latlng.lng}`;
+  map.on('click', (e) => {
+    if (e.latlng.lat < PERU_BOUNDS[0][0] || e.latlng.lat > PERU_BOUNDS[1][0] ||
+        e.latlng.lng < PERU_BOUNDS[0][1] || e.latlng.lng > PERU_BOUNDS[1][1]) {
+      mostrarToast('La ubicación debe estar en Perú', 'error');
+      return;
+    }
     marker.setLatLng(e.latlng);
+    reverseGeocode(e.latlng.lat, e.latlng.lng);
   });
 
-  marker.on('dragend', async () => {
+  marker.on('dragend', () => {
     const pos = marker.getLatLng();
-    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.lat}&lon=${pos.lng}&addressdetails=1&accept-language=es`);
-    const data = await res.json();
-    document.getElementById('cart-direccion').value = data.display_name || `${pos.lat}, ${pos.lng}`;
+    reverseGeocode(pos.lat, pos.lng);
   });
 }
 
@@ -498,12 +530,13 @@ document.getElementById('cart-direccion').addEventListener('input', function () 
   const val = this.value.trim();
   if (val.length < 5) return;
   timeoutMapa = setTimeout(async () => {
-    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(val)}&limit=1&accept-language=es`);
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(val)},Perú&limit=1&accept-language=es`);
     const data = await res.json();
     if (data.length > 0) {
       const coords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
       map.setView(coords, 15);
       marker.setLatLng(coords);
+      reverseGeocode(coords[0], coords[1]);
     }
   }, 800);
 });

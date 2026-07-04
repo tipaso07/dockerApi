@@ -34,6 +34,24 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+router.put('/ubicacion', verificarToken, async (req, res) => {
+  try {
+    const { lat, lng } = req.body;
+    if (lat == null || lng == null) {
+      return res.status(400).json({ error: 'lat y lng son requeridos' });
+    }
+    const usuario = await Usuario.findByIdAndUpdate(
+      req.usuario.id,
+      { ubicacion: { lat, lng } },
+      { new: true }
+    ).select('-password');
+    if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
+    res.json({ mensaje: 'Ubicación guardada', ubicacion: usuario.ubicacion });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.put('/:id', verificarToken, verificarAdmin, async (req, res) => {
   try {
     const { nombre, email, rol, password, zona } = req.body;

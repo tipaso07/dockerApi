@@ -42,6 +42,7 @@ async function cargarPedidos() {
         <td>${p.repartidorId?.nombre || 'Sin asignar'}</td>
         <td>S/. ${p.boleta.montoTotal.toFixed(2)}</td>
         <td>${p.metodoPago}</td>
+        <td>${p.lat != null ? p.lat.toFixed(4) + ', ' + p.lng.toFixed(4) : '—'}</td>
         <td>${new Date(p.fecha).toLocaleDateString()}</td>
         <td class="estado-${p.estado.replace(/\s/g, '-')}">${p.estado}</td>
         <td>${btnAccion} <button onclick='abrirEditarPedido("${p._id}")'>Editar</button></td>
@@ -79,6 +80,12 @@ async function abrirEditarPedido(id) {
   document.getElementById('edit-pedido-total').textContent = pedido.boleta.montoTotal.toFixed(2);
   document.getElementById('edit-pedido-estado').value = pedido.estado;
   document.getElementById('edit-pedido-zona').value = pedido.zonaEntrega || '';
+  const coordsEl = document.getElementById('edit-pedido-coords');
+  if (pedido.lat != null && pedido.lng != null) {
+    coordsEl.textContent = `📍 ${pedido.lat.toFixed(4)}, ${pedido.lng.toFixed(4)}`;
+  } else {
+    coordsEl.textContent = '📍 Sin coordenadas';
+  }
 
   const repSelect = document.getElementById('edit-pedido-repartidor');
   const usuarios = await apiFetch('/usuarios');

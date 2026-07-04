@@ -25,6 +25,8 @@ const PedidoSchema = new mongoose.Schema({
 
     repartidorId: { type: mongoose.Schema.Types.ObjectId, ref: 'Usuario', default: null, index: true },
     direccionEntrega: { type: String, required: true },
+    lat: { type: Number, default: null },
+    lng: { type: Number, default: null },
     zonaEntrega: {
         type: String,
         enum: ['', 'Norte', 'Sur', 'Este', 'Oeste', 'Centro'],

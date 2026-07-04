@@ -5,13 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Repartidor - App Tienda</title>
   <link rel="stylesheet" href="/css/estilos.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body>
   <div class="layout">
     <nav class="sidebar">
       <h3>Repartidor</h3>
       <div class="user-info" id="sidebar-user"></div>
-      <a class="active" data-section="entregas">Entregas</a>
+      <div class="sidebar-divider">ENTREGAS</div>
+      <a class="active" data-section="entregas">Mis Entregas</a>
+      <div class="sidebar-divider">PERFIL</div>
+      <a data-section="mi-perfil">Mi Perfil</a>
       <div class="logout"><a id="btn-logout">Cerrar Sesión</a></div>
     </nav>
     <div class="main-content">
@@ -22,11 +26,29 @@
           <tbody id="entregas-tbody"></tbody>
         </table>
       </div>
+
+      <div class="section" id="sec-mi-perfil">
+        <h1>Mi Perfil</h1>
+        <div class="profile-card" id="perfil-repartidor">
+          <div class="profile-avatar" id="perfil-avatar">U</div>
+          <h2 id="perfil-nombre">Cargando...</h2>
+          <p class="profile-bio" id="perfil-bio"></p>
+          <p class="profile-email" id="perfil-email"></p>
+        </div>
+        <h3 style="margin-top:24px;margin-bottom:12px;">Ubicación actual</h3>
+        <p style="font-size:13px;color:#718096;margin-bottom:12px;">
+          Arrastra el marcador a tu ubicación actual y guarda los cambios.
+        </p>
+        <div id="mapa-repartidor" style="height:300px;border-radius:8px;border:1px solid #ddd;margin-bottom:16px;"></div>
+        <p id="repartidor-ubicacion-info" style="font-size:13px;color:#4a5568;margin-bottom:12px;"></p>
+        <button id="btn-guardar-ubicacion" class="btn-primary" style="padding:12px 24px;background:#667eea;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px;">Guardar Ubicación</button>
+      </div>
     </div>
   </div>
 
   <div class="toast-container" id="toast-container"></div>
 
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script src="/js/auth.js"></script>
   <script src="/js/repartidor.js"></script>

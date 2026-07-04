@@ -13,6 +13,10 @@ const UsuarioSchema = new mongoose.Schema({
         enum: ['', 'Norte', 'Sur', 'Este', 'Oeste', 'Centro'],
         default: ''
     },
+    ubicacion: {
+        lat: { type: Number, default: null },
+        lng: { type: Number, default: null }
+    },
     historialCompras: [
         { type: mongoose.Schema.Types.ObjectId, ref: 'Pedido' }
     ]

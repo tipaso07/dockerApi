@@ -6,45 +6,62 @@ const { verificarToken, verificarAdmin } = require('../middleware/auth');
 
 const router = express.Router();
 
-const ZONAS = ['Norte', 'Sur', 'Este', 'Oeste', 'Centro'];
+function calcularDistancia(lat1, lng1, lat2, lng2) {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) *
+    Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
 
-async function autoAsignarRepartidor(zonaEntrega) {
-  let repartidores;
-  if (zonaEntrega) {
-    console.log(`[AUTO-ASSIGN] Buscando repartidores en zona: ${zonaEntrega}`);
-    repartidores = await Usuario.find({ rol: 'Repartidor', zona: zonaEntrega });
-    console.log(`[AUTO-ASSIGN] Encontrados ${repartidores.length} repartidores en zona ${zonaEntrega}`);
-  }
-  if (!repartidores || repartidores.length === 0) {
-    console.log('[AUTO-ASSIGN] Sin repartidores en zona, buscando todos los repartidores');
-    repartidores = await Usuario.find({ rol: 'Repartidor' });
-    console.log(`[AUTO-ASSIGN] Total repartidores disponibles: ${repartidores.length}`);
-  }
+const RADIO_MAX_KM = 50;
+
+async function autoAsignarRepartidor(lat, lng) {
+  const repartidores = await Usuario.find({ rol: 'Repartidor' });
   if (repartidores.length === 0) {
     console.log('[AUTO-ASSIGN] NO hay repartidores en la BD');
     return null;
   }
 
-  let mejorRep = null;
-  let menorCarga = Infinity;
+  let candidatos = [];
   for (const rep of repartidores) {
-    const count = await Pedido.countDocuments({
-      repartidorId: rep._id,
-      estado: { $ne: 'Entregado' }
-    });
-    console.log(`[AUTO-ASSIGN] ${rep.nombre}: ${count} pedidos no entregados`);
-    if (count < menorCarga) {
-      menorCarga = count;
-      mejorRep = rep._id;
+    if (rep.ubicacion?.lat != null && rep.ubicacion?.lng != null) {
+      const dist = calcularDistancia(lat, lng, rep.ubicacion.lat, rep.ubicacion.lng);
+      console.log(`[AUTO-ASSIGN] ${rep.nombre}: ${dist.toFixed(2)} km de distancia`);
+      if (dist <= RADIO_MAX_KM) {
+        const count = await Pedido.countDocuments({
+          repartidorId: rep._id,
+          estado: { $ne: 'Entregado' }
+        });
+        candidatos.push({ id: rep._id, distancia: dist, carga: count });
+      }
+    } else {
+      candidatos.push({ id: rep._id, distancia: Infinity, carga: 0 });
     }
   }
-  console.log(`[AUTO-ASSIGN] Seleccionado: ${mejorRep} con ${menorCarga} pedidos`);
-  return mejorRep;
+
+  if (candidatos.length === 0) {
+    console.log('[AUTO-ASSIGN] Sin candidatos disponibles');
+    return null;
+  }
+
+  candidatos.sort((a, b) => {
+    if (a.distancia !== b.distancia) return a.distancia - b.distancia;
+    return a.carga - b.carga;
+  });
+
+  const elegido = candidatos[0];
+  console.log(`[AUTO-ASSIGN] Seleccionado: ${elegido.id} (dist: ${elegido.distancia.toFixed(2)}km, carga: ${elegido.carga})`);
+  return elegido.id;
 }
 
 router.post('/', verificarToken, async (req, res) => {
   try {
-    const { productosCarrito, metodoPago, direccionEntrega, zonaEntrega } = req.body;
+    const { productosCarrito, metodoPago, direccionEntrega, zonaEntrega, lat, lng } = req.body;
     const clienteId = req.usuario.id;
 
     let totalGeneral = 0;
@@ -66,17 +83,25 @@ router.post('/', verificarToken, async (req, res) => {
     const numeroBoleta = `B001-${Math.floor(100000 + Math.random() * 900000)}`;
 
     const nuevoPedido = new Pedido({
-      clienteId, metodoPago, direccionEntrega, zonaEntrega: zonaEntrega || '', estado: 'Pendiente',
+      clienteId, metodoPago, direccionEntrega,
+      zonaEntrega: zonaEntrega || '',
+      lat: lat != null ? lat : null,
+      lng: lng != null ? lng : null,
+      estado: 'Pendiente',
       boleta: { numeroBoleta, productos: productosProcesados, montoGrabado: Number(totalGeneral.toFixed(2)), igv, montoTotal }
     });
 
     const pedidoGuardado = await nuevoPedido.save();
 
-    const mejorRep = await autoAsignarRepartidor(zonaEntrega || '');
-    if (mejorRep) {
-      pedidoGuardado.repartidorId = mejorRep;
-      await pedidoGuardado.save();
-      console.log(`[POST PEDIDO] Repartidor ${mejorRep} asignado automaticamente`);
+    const deliveryLat = lat != null ? lat : null;
+    const deliveryLng = lng != null ? lng : null;
+    if (deliveryLat != null && deliveryLng != null) {
+      const mejorRep = await autoAsignarRepartidor(deliveryLat, deliveryLng);
+      if (mejorRep) {
+        pedidoGuardado.repartidorId = mejorRep;
+        await pedidoGuardado.save();
+        console.log(`[POST PEDIDO] Repartidor ${mejorRep} asignado automaticamente`);
+      }
     }
 
     const pedidoPoblado = await Pedido.findById(pedidoGuardado._id)
@@ -134,9 +159,12 @@ router.put('/:id/estado', verificarToken, verificarAdmin, async (req, res) => {
       const pedidoActual = await Pedido.findById(req.params.id);
       if (!pedidoActual) return res.status(404).json({ error: 'Pedido no encontrado' });
       if (!pedidoActual.repartidorId) {
-        const zona = zonaEntrega || pedidoActual.zonaEntrega;
-        const mejorRep = await autoAsignarRepartidor(zona);
-        if (mejorRep) update.repartidorId = mejorRep;
+        const dLat = pedidoActual.lat;
+        const dLng = pedidoActual.lng;
+        if (dLat != null && dLng != null) {
+          const mejorRep = await autoAsignarRepartidor(dLat, dLng);
+          if (mejorRep) update.repartidorId = mejorRep;
+        }
       }
     }
 
