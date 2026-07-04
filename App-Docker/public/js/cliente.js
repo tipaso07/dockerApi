@@ -1,4 +1,5 @@
 let carrito = [];
+let postActualId = null;
 
 document.querySelectorAll('.sidebar a[data-section]').forEach(a => {
   a.addEventListener('click', () => {
@@ -18,12 +19,8 @@ function mostrarToast(mensaje, tipo = 'success') {
   setTimeout(() => toast.remove(), 3000);
 }
 
-function abrirModal(id) {
-  document.getElementById(id).classList.remove('hidden');
-}
-function cerrarModal(id) {
-  document.getElementById(id).classList.add('hidden');
-}
+function abrirModal(id) { document.getElementById(id).classList.remove('hidden'); }
+function cerrarModal(id) { document.getElementById(id).classList.add('hidden'); }
 
 let todosProductos = [];
 
@@ -180,14 +177,274 @@ function verDetallePedido(id) {
   });
 }
 
-const socket = io();
-socket.on('estado_pedido_actualizado', (pedido) => {
+// ===================== SOCIAL - FEED =====================
+
+document.getElementById('btn-publicar-post').addEventListener('click', async () => {
+  const contenido = document.getElementById('post-contenido').value.trim();
+  if (!contenido) return mostrarToast('Escribe algo para publicar', 'error');
+  await apiFetch('/posts', { method: 'POST', body: JSON.stringify({ contenido }) });
+  document.getElementById('post-contenido').value = '';
+  mostrarToast('Post publicado', 'success');
+  cargarFeed();
+});
+
+async function cargarFeed() {
+  const posts = await apiFetch('/posts');
+  const container = document.getElementById('feed-posts');
+
+  const likesInfo = await Promise.all(posts.map(p =>
+    apiFetch(`/posts/${p._id}/likes`).then(likes => ({ postId: p._id, likes })).catch(() => ({ postId: p._id, likes: [] }))
+  ));
+
+  container.innerHTML = posts.map(p => {
+    const likeInfo = likesInfo.find(l => l.postId === p._id);
+    const userLiked = likeInfo ? likeInfo.likes.some(l => l.usuarioId?._id === usuario.id) : false;
+    const likesCount = likeInfo ? likeInfo.likes.length : (p.likesCount || 0);
+
+    return `
+      <div class="feed-card">
+        <div class="feed-header">
+          <div class="feed-avatar">${(p.autor?.nombre || 'U')[0].toUpperCase()}</div>
+          <div class="feed-author">
+            <strong>${p.autor?.nombre || 'Usuario'}</strong>
+            <span class="feed-date">${new Date(p.fecha).toLocaleString()}</span>
+          </div>
+          ${p.autor?._id !== usuario.id ? `<button class="feed-ver-perfil" onclick="verPerfilUsuario('${p.autor?._id}')">Ver perfil</button>` : ''}
+        </div>
+        <div class="feed-content">${p.contenido}</div>
+        <div class="feed-actions">
+          <button class="feed-like-btn ${userLiked ? 'liked' : ''}" onclick="toggleLike('${p._id}', this)">
+            ${userLiked ? '❤️' : '🤍'} <span class="likes-count">${likesCount}</span>
+          </button>
+          <button class="feed-comment-btn" onclick="abrirComentarios('${p._id}')">
+            💬 <span class="comments-count" id="comments-count-${p._id}">0</span>
+          </button>
+        </div>
+        <div class="feed-comments" id="feed-comments-${p._id}"></div>
+      </div>
+    `;
+  }).join('');
+
+  posts.forEach(p => cargarContadorComentarios(p._id));
+}
+
+async function cargarContadorComentarios(postId) {
+  try {
+    const comentarios = await apiFetch(`/comentarios/post/${postId}`);
+    const countSpan = document.querySelector(`#comments-count-${postId}`);
+    if (countSpan) countSpan.textContent = comentarios.length;
+  } catch (_) {}
+}
+
+async function toggleLike(postId, btn) {
+  try {
+    const data = await apiFetch(`/posts/${postId}/like`, { method: 'POST' });
+    const countSpan = btn.querySelector('.likes-count');
+    let count = parseInt(countSpan.textContent) || 0;
+    if (data.liked) {
+      btn.classList.add('liked');
+      btn.innerHTML = `❤️ <span class="likes-count">${count + 1}</span>`;
+    } else {
+      btn.classList.remove('liked');
+      btn.innerHTML = `🤍 <span class="likes-count">${count - 1}</span>`;
+    }
+  } catch (err) {
+    mostrarToast('Error: ' + err.message, 'error');
+  }
+}
+
+let comentarioPostId = null;
+
+async function abrirComentarios(postId) {
+  comentarioPostId = postId;
+  document.getElementById('comentario-input').value = '';
+  await cargarComentariosModal(postId);
+  abrirModal('modal-comentarios');
+}
+
+async function cargarComentariosModal(postId) {
+  try {
+    const comentarios = await apiFetch(`/comentarios/post/${postId}`);
+    const lista = document.getElementById('comentarios-lista');
+    if (comentarios.length === 0) {
+      lista.innerHTML = '<p style="color:#a0aec0;">Sin comentarios aún</p>';
+    } else {
+      lista.innerHTML = comentarios.map(c => `
+        <div class="comment-item">
+          <strong>${c.autor?.nombre || 'Usuario'}</strong>
+          <span>${c.contenido}</span>
+          <span class="comment-date">${new Date(c.fecha).toLocaleString()}</span>
+        </div>
+      `).join('');
+    }
+  } catch (_) {
+    document.getElementById('comentarios-lista').innerHTML = '<p style="color:#a0aec0;">Error al cargar comentarios</p>';
+  }
+}
+
+document.getElementById('btn-enviar-comentario').addEventListener('click', async () => {
+  const contenido = document.getElementById('comentario-input').value.trim();
+  if (!contenido || !comentarioPostId) return;
+  await apiFetch('/comentarios', {
+    method: 'POST',
+    body: JSON.stringify({ contenido, postId: comentarioPostId })
+  });
+  document.getElementById('comentario-input').value = '';
+  await cargarComentariosModal(comentarioPostId);
+  cargarContadorComentarios(comentarioPostId);
+  mostrarToast('Comentario publicado', 'success');
+});
+
+// ===================== SOCIAL - PERFIL =====================
+
+async function cargarMiPerfil() {
+  const perfil = await apiFetch('/usuarios/perfil');
+  const seguidores = await apiFetch(`/seguidores/${perfil._id}/seguidores`);
+  const siguiendo = await apiFetch(`/seguidores/${perfil._id}/siguiendo`);
+
+  const container = document.getElementById('perfil-propio');
+  container.innerHTML = `
+    <div class="profile-card">
+      <div class="profile-avatar">${(perfil.nombre || 'U')[0].toUpperCase()}</div>
+      <h2>${perfil.nombre}</h2>
+      <p class="profile-bio">${perfil.bio || 'Sin biografía'}</p>
+      <div class="profile-stats">
+        <div class="stat"><strong>${seguidores.length}</strong> seguidores</div>
+        <div class="stat"><strong>${siguiendo.length}</strong> siguiendo</div>
+      </div>
+      <p class="profile-email">${perfil.email}</p>
+      <p class="profile-date">Miembro desde ${new Date(perfil.fechaRegistro).toLocaleDateString()}</p>
+    </div>
+    <h3 style="margin-top:24px;">Mis Posts</h3>
+    <div id="perfil-posts"></div>
+  `;
+  const posts = await apiFetch('/posts');
+  const misPosts = posts.filter(p => p.autor?._id === perfil._id);
+  const postsContainer = document.getElementById('perfil-posts');
+  if (misPosts.length === 0) {
+    postsContainer.innerHTML = '<p style="color:#a0aec0;">No has publicado nada aún</p>';
+  } else {
+    postsContainer.innerHTML = misPosts.map(p => `
+      <div class="feed-card" style="margin-bottom:12px;">
+        <div class="feed-content">${p.contenido}</div>
+        <div class="feed-date" style="margin-top:8px;">${new Date(p.fecha).toLocaleString()}</div>
+      </div>
+    `).join('');
+  }
+}
+
+async function verPerfilUsuario(userId) {
+  if (!userId) return;
+  try {
+    const perfil = await apiFetch(`/usuarios/${userId}`);
+    const seguidores = await apiFetch(`/seguidores/${userId}/seguidores`);
+    const siguiendo = await apiFetch(`/seguidores/${userId}/siguiendo`);
+    let estadoFollow = { siguiendo: false };
+    try {
+      estadoFollow = await apiFetch(`/seguidores/${userId}/estado`);
+    } catch (_) {}
+
+    const content = document.getElementById('modal-perfil-content');
+    content.innerHTML = `
+      <div class="profile-card">
+        <div class="profile-avatar">${(perfil.nombre || 'U')[0].toUpperCase()}</div>
+        <h2>${perfil.nombre}</h2>
+        <p class="profile-bio">${perfil.bio || 'Sin biografía'}</p>
+        <div class="profile-stats">
+          <div class="stat"><strong>${seguidores.length}</strong> seguidores</div>
+          <div class="stat"><strong>${siguiendo.length}</strong> siguiendo</div>
+        </div>
+        <button class="follow-btn ${estadoFollow.siguiendo ? 'following' : ''}" onclick="toggleFollowUsuario('${userId}', this)">
+          ${estadoFollow.siguiendo ? 'Siguiendo' : '+ Seguir'}
+        </button>
+      </div>
+      <div class="modal-actions" style="margin-top:16px;">
+        <button class="btn-secondary" onclick="cerrarModal('modal-perfil-usuario')">Cerrar</button>
+      </div>
+    `;
+    abrirModal('modal-perfil-usuario');
+  } catch (err) {
+    mostrarToast('Error al cargar perfil', 'error');
+  }
+}
+
+async function toggleFollowUsuario(userId, btn) {
+  try {
+    const data = await apiFetch(`/seguidores/${userId}/seguir`, { method: 'POST' });
+    if (data.siguiendo) {
+      btn.classList.add('following');
+      btn.textContent = 'Siguiendo';
+    } else {
+      btn.classList.remove('following');
+      btn.textContent = '+ Seguir';
+    }
+    mostrarToast(data.mensaje, 'success');
+  } catch (err) {
+    mostrarToast('Error: ' + err.message, 'error');
+  }
+}
+
+// ===================== NOTIFICACIONES =====================
+
+async function cargarNotificaciones() {
+  try {
+    const data = await apiFetch('/notificaciones');
+    const badge = document.getElementById('notif-badge');
+    if (data.noLeidas > 0) {
+      badge.textContent = data.noLeidas;
+      badge.classList.remove('hidden');
+    } else {
+      badge.classList.add('hidden');
+    }
+
+    const lista = document.getElementById('notificaciones-lista');
+    if (data.notificaciones.length === 0) {
+      lista.innerHTML = '<p style="color:#a0aec0;">No tienes notificaciones</p>';
+      return;
+    }
+    lista.innerHTML = data.notificaciones.map(n => `
+      <div class="notif-item ${n.leido ? '' : 'notif-no-leida'}" onclick="marcarLeida('${n._id}')">
+        <div class="notif-icon">${n.tipo === 'like' ? '❤️' : n.tipo === 'comentario' ? '💬' : '👤'}</div>
+        <div class="notif-content">
+          <p>${n.mensaje}</p>
+          <span class="notif-date">${new Date(n.fecha).toLocaleString()}</span>
+        </div>
+        ${n.leido ? '' : '<span class="notif-dot"></span>'}
+      </div>
+    `).join('');
+  } catch (_) {}
+}
+
+async function marcarLeida(id) {
+  await apiFetch(`/notificaciones/${id}/leer`, { method: 'PUT' });
+  cargarNotificaciones();
+}
+
+document.getElementById('btn-leer-todas').addEventListener('click', async () => {
+  await apiFetch('/notificaciones/leer-todas', { method: 'PUT' });
+  mostrarToast('Todas marcadas como leídas', 'success');
+  cargarNotificaciones();
+});
+
+// ===================== SOCKET.IO =====================
+
+const socketClient = io();
+socketClient.on('estado_pedido_actualizado', (pedido) => {
   if (pedido.clienteId === usuario.id || pedido.clienteId?._id === usuario.id) {
     reproducirSonido();
     mostrarToast(`Tu pedido ${pedido.boleta.numeroBoleta} cambió a: ${pedido.estado}`, 'info');
     cargarMisPedidos();
   }
 });
+socketClient.on('nueva_notificacion', () => {
+  cargarNotificaciones();
+});
+
+// ===================== INIT =====================
 
 cargarProductos();
 cargarMisPedidos();
+cargarFeed();
+cargarMiPerfil();
+cargarNotificaciones();
+setInterval(cargarNotificaciones, 30000);

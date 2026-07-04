@@ -87,7 +87,6 @@ async function abrirEditarPedido(id) {
   abrirModal('modal-editar-pedido');
 }
 
-
 document.getElementById('edit-pedido-estado').addEventListener('change', function () {
   if (this.value === 'En Camino') {
     const repSelect = document.getElementById('edit-pedido-repartidor');
@@ -107,7 +106,6 @@ document.getElementById('btn-guardar-pedido').addEventListener('click', async ()
     body: JSON.stringify({ estado })
   });
 
-
   if (repartidorId) {
     await apiFetch(`/pedidos/${id}/repartidor`, {
       method: 'PUT',
@@ -119,7 +117,6 @@ document.getElementById('btn-guardar-pedido').addEventListener('click', async ()
   mostrarToast('Pedido actualizado', 'success');
   cargarPedidos();
 });
-
 
 async function cargarProductos() {
   const productos = await apiFetch('/productos');
@@ -191,7 +188,6 @@ document.getElementById('btn-guardar-editar-producto').addEventListener('click',
   cargarProductos();
 });
 
-
 async function cargarUsuarios() {
   const usuarios = await apiFetch('/usuarios');
   const tbody = document.getElementById('usuarios-tbody');
@@ -262,6 +258,35 @@ document.getElementById('btn-guardar-nuevo-usuario').addEventListener('click', a
   cargarUsuarios();
 });
 
+// ===================== MODERACIÓN DE POSTS =====================
+
+async function cargarPostsAdmin() {
+  const posts = await apiFetch('/posts');
+  const tbody = document.getElementById('posts-tbody');
+  tbody.innerHTML = posts.map(p => `
+    <tr>
+      <td>${p.autor?.nombre || 'N/A'}</td>
+      <td>${p.contenido.substring(0, 80)}${p.contenido.length > 80 ? '...' : ''}</td>
+      <td>${new Date(p.fecha).toLocaleDateString()}</td>
+      <td>${p.likesCount || 0}</td>
+      <td>
+        <button class="btn-eliminar-post danger" data-id="${p._id}" data-autor="${p.autor?.nombre || ''}">Eliminar</button>
+      </td>
+    </tr>
+  `).join('');
+
+  document.querySelectorAll('.btn-eliminar-post').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (confirm(`¿Eliminar el post de ${btn.dataset.autor}?`)) {
+        await apiFetch(`/posts/${btn.dataset.id}`, { method: 'DELETE' });
+        mostrarToast('Post eliminado', 'success');
+        cargarPostsAdmin();
+      }
+    });
+  });
+}
+
 cargarPedidos();
 cargarProductos();
 cargarUsuarios();
+cargarPostsAdmin();

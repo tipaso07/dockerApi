@@ -31,8 +31,25 @@ async function apiFetch(url, options = {}) {
   return data;
 }
 
+async function cargarNoLeidas() {
+  if (!token || !usuario) return;
+  try {
+    const data = await apiFetch('/notificaciones');
+    const badge = document.getElementById('notif-badge');
+    if (badge) {
+      if (data.noLeidas > 0) {
+        badge.textContent = data.noLeidas;
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+    }
+  } catch (_) {}
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-  if (window.location.pathname.endsWith('admin.html') || window.location.pathname.endsWith('cliente.html')) {
+  const isAuthPage = ['admin.html', 'cliente.html', 'repartidor.html'].some(p => window.location.pathname.endsWith(p));
+  if (isAuthPage) {
     if (!token) return window.location.href = '/';
     document.getElementById('sidebar-user').textContent = `${usuario.nombre} (${usuario.rol})`;
     document.getElementById('btn-logout')?.addEventListener('click', cerrarSesion);

@@ -9,13 +9,27 @@
 <body>
   <div class="layout">
     <nav class="sidebar">
-      <h3>Tienda</h3>
       <div class="user-info" id="sidebar-user"></div>
+
+      <div class="sidebar-divider">COMPRAS</div>
       <a class="active" data-section="productos">Productos</a>
       <a data-section="mis-pedidos">Mis Pedidos</a>
+
+      <div class="sidebar-divider">RED SOCIAL</div>
+      <a data-section="feed">Feed</a>
+      <a data-section="perfil">Mi Perfil</a>
+
+      <div class="sidebar-section notif-section">
+        <a data-section="notificaciones" class="notif-link">
+          Notificaciones <span class="notif-badge hidden" id="notif-badge">0</span>
+        </a>
+      </div>
+
       <div class="logout"><a id="btn-logout">Cerrar Sesión</a></div>
     </nav>
     <div class="main-content">
+
+      <!-- ===== PRODUCTOS ===== -->
       <div class="section active" id="sec-productos">
         <h1>Productos</h1>
         <div class="form-inline">
@@ -26,6 +40,8 @@
         </div>
         <div class="productos-grid" id="productos-grid"></div>
       </div>
+
+      <!-- ===== MIS PEDIDOS ===== -->
       <div class="section" id="sec-mis-pedidos">
         <h1>Mis Pedidos</h1>
         <table>
@@ -33,6 +49,29 @@
           <tbody id="pedidos-tbody"></tbody>
         </table>
       </div>
+
+      <!-- ===== FEED (Red Social) ===== -->
+      <div class="section" id="sec-feed">
+        <h1>Feed</h1>
+        <div class="crear-post">
+          <textarea id="post-contenido" placeholder="¿Qué estás pensando?" rows="3"></textarea>
+          <button id="btn-publicar-post">Publicar</button>
+        </div>
+        <div id="feed-posts"></div>
+      </div>
+
+      <!-- ===== MI PERFIL ===== -->
+      <div class="section" id="sec-perfil">
+        <div id="perfil-propio"></div>
+      </div>
+
+      <!-- ===== NOTIFICACIONES ===== -->
+      <div class="section" id="sec-notificaciones">
+        <h1>Notificaciones</h1>
+        <button id="btn-leer-todas" class="btn-link" style="margin-bottom:16px;">Marcar todas como leídas</button>
+        <div id="notificaciones-lista"></div>
+      </div>
+
     </div>
   </div>
 
@@ -58,6 +97,7 @@
 
   <div class="toast-container" id="toast-container"></div>
 
+  <!-- Modal Detalle Pedido -->
   <div class="modal-overlay hidden" id="modal-detalle">
     <div class="modal">
       <h2 id="detalle-boleta">Boleta</h2>
@@ -82,6 +122,26 @@
         <button class="btn-secondary" onclick="cerrarModal('modal-detalle')">Cerrar</button>
       </div>
     </div>
+  </div>
+
+  <!-- Modal Comentarios -->
+  <div class="modal-overlay hidden" id="modal-comentarios">
+    <div class="modal">
+      <h2>Comentarios</h2>
+      <div id="comentarios-lista" style="max-height:300px;overflow-y:auto;margin-bottom:16px;"></div>
+      <div style="display:flex;gap:8px;">
+        <input type="text" id="comentario-input" placeholder="Escribe un comentario..." style="flex:1;">
+        <button id="btn-enviar-comentario" class="btn-primary">Enviar</button>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="cerrarModal('modal-comentarios')">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Perfil Usuario -->
+  <div class="modal-overlay hidden" id="modal-perfil-usuario">
+    <div class="modal" id="modal-perfil-content"></div>
   </div>
 
   <script src="/socket.io/socket.io.js"></script>

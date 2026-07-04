@@ -13,9 +13,12 @@
     <nav class="sidebar">
       <h3>Panel Admin</h3>
       <div class="user-info" id="sidebar-user"></div>
+      <div class="sidebar-divider">GESTIÓN</div>
       <a class="active" data-section="pedidos">Pedidos</a>
       <a data-section="inventario">Inventario</a>
       <a data-section="usuarios">Usuarios</a>
+      <div class="sidebar-divider">SOCIAL</div>
+      <a data-section="posts">Posts</a>
       <div class="logout"><a id="btn-logout">Cerrar Sesión</a></div>
     </nav>
     <div class="main-content">
@@ -82,6 +85,21 @@
             </tr>
           </thead>
           <tbody id="usuarios-tbody"></tbody>
+        </table>
+      </div>
+      <div class="section" id="sec-posts">
+        <h1>Posts - Moderación</h1>
+        <table>
+          <thead>
+            <tr>
+              <th>Autor</th>
+              <th>Contenido</th>
+              <th>Fecha</th>
+              <th>Likes</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody id="posts-tbody"></tbody>
         </table>
       </div>
     </div>
