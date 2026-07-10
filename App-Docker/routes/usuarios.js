@@ -16,7 +16,7 @@ router.get('/', verificarToken, verificarAdmin, async (req, res) => {
 
 router.get('/perfil', verificarToken, async (req, res) => {
   try {
-    const usuario = await Usuario.findById(req.usuario.id).select('-password');
+    const usuario = await Usuario.findById(req.usuario.id).select('-password -historialCompras -ubicacion');
     if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
     res.json(usuario);
   } catch (err) {
@@ -39,7 +39,7 @@ router.put('/perfil', verificarToken, async (req, res) => {
 
 router.get('/:id', async (req, res) => {
   try {
-    const usuario = await Usuario.findById(req.params.id).select('-password');
+    const usuario = await Usuario.findById(req.params.id).select('-password -historialCompras -ubicacion -email -zona');
     if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
     res.json(usuario);
   } catch (err) {
