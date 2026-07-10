@@ -179,6 +179,66 @@ const metodosPago = ['Efectivo', 'Tarjeta Crédito', 'Tarjeta Débito', 'Yape', 
 const estadosPedido = ['Pendiente', 'En Camino', 'Entregado'];
 const categoriasProducto = ['Alimentos', 'Cuidado Personal'];
 
+function randomFrom(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function randomBetween(min, max) {
+  return Number((Math.random() * (max - min) + min).toFixed(2));
+}
+
+const nombresExtra = [
+  'Andrea', 'Boris', 'Carmen', 'Daniel', 'Elena', 'Francisco', 'Gloria', 'Hector',
+  'Irene', 'Jorge', 'Karen', 'Leonardo', 'Monica', 'Nelson', 'Olga', 'Pablo',
+  'Quinn', 'Rosa', 'Sergio', 'Tania', 'Ursula', 'Victor', 'Wendy', 'Xavier',
+  'Yolanda', 'Zacarias', 'Alan', 'Brenda', 'Claudio', 'Diana', 'Esteban', 'Fabiola',
+  'German', 'Hilda', 'Ivan', 'Julia', 'Kevin', 'Laura', 'Marco', 'Nancy',
+  'Oscar', 'Patricia', 'Ricardo', 'Sandra', 'Tomas', 'Vanessa', 'Walter', 'Ximena',
+  'Yerson', 'Zulema', 'Adrian', 'Beatriz', 'Cesar', 'Daniela', 'Eduardo', 'Flor',
+  'Gustavo', 'Helen', 'Ismael', 'Jessica', 'Kevin', 'Lorena', 'Mauricio', 'Natalia',
+  'Orlando', 'Paula', 'Reynaldo', 'Sonia', 'Teodoro', 'Uriel', 'Valeria', 'Wilson',
+  'Yenny', 'Zosimo', 'Alex', 'Claudia', 'Dennis', 'Erica', 'Fabio', 'Gina',
+  'Harold', 'Ivette', 'Joel', 'Katherine', 'Luis', 'Margarita', 'Nino', 'Olimpia',
+];
+
+const prefijosPost = [
+  'Promoción de la semana:', 'Nuevo en tienda:', 'No te lo pierdas:',
+  'Oferta especial:', 'Recomendación del día:', 'Descuento exclusivo:',
+  'Lanzamiento:', 'Edición limitada:', 'Por tiempo limitado:',
+  'Solo esta semana:',
+];
+
+const sufijosPost = [
+  ' ¡Ordénalo ya!', ' Disponibles mientras duren stock.',
+  ' Pedidos por la app o WhatsApp.', ' Envío gratis en tu primer pedido.',
+  ' Combínalo con otro producto.', ' Sabor garantizado.',
+  ' Calidad premium.', ' El favorito de todos.',
+  ' Nuevo sabor disponible.', ' Edición especial de temporada.',
+];
+
+const textosComentariosExtra = [
+  'Muy buen servicio, seguiré pidiendo',
+  'Me sorprendió la calidad del producto',
+  'El sabor es fantástico',
+  'Rápido y delicioso, todo perfecto',
+  'Sin duda mi nueva tienda favorita',
+  'El mejor delivery de la zona',
+  'Todo llegó perfecto y a tiempo',
+  'Los recomiendo al 100%',
+  'Producto de primera calidad',
+  'Experiencia de compra excelente',
+  'Muy buena presentación del pedido',
+  'Las porciones son generosas',
+  'Precios muy competitivos',
+  'El empaque es muy práctico',
+  'Fácil de pedir, rápido de recibir',
+  'Mi familia quedó encantada',
+  'Definitivamente volveré a pedir',
+  'El mejor sabor que he probado',
+  'Servicio impecable',
+  'Cumplieron con todo lo prometido',
+];
+
 async function seed() {
   try {
     await mongoose.connect(MONGO_URI);
@@ -193,19 +253,72 @@ async function seed() {
 
     const salt = await bcrypt.genSalt(10);
     const usuariosCreados = [];
+
     for (const u of usuariosData) {
       const hash = await bcrypt.hash(u.password, salt);
       const usuario = await Usuario.create({ ...u, password: hash, fechaRegistro: new Date(Date.now() - Math.random() * 90 * 86400000) });
       usuariosCreados.push(usuario);
     }
-    console.log(`${usuariosCreados.length} usuarios creados`);
+    console.log(`${usuariosCreados.length} usuarios base creados`);
+
+    for (let i = 0; i < 85; i++) {
+      const nombre = nombresExtra[i % nombresExtra.length] + ' ' + nombresExtra[(i + 5) % nombresExtra.length];
+      const email = `cliente${i + 1}@mail.com`;
+      const hash = await bcrypt.hash('123456', salt);
+      const usuario = await Usuario.create({
+        nombre,
+        email,
+        password: hash,
+        rol: 'Cliente',
+        bio: randomFrom(['Amante de la comida', 'Delivery frecuente', 'Nuevo en la plataforma', 'Siempre antojado', 'Probando todo', 'Comida favorita']),
+        avatar: '',
+        fechaRegistro: new Date(Date.now() - Math.random() * 90 * 86400000),
+      });
+      usuariosCreados.push(usuario);
+    }
+    console.log(`${usuariosCreados.length} usuarios totales creados`);
 
     const productosCreados = [];
     for (const p of productosData) {
       const prod = await Producto.create(p);
       productosCreados.push(prod);
     }
-    console.log(`${productosCreados.length} productos creados`);
+    console.log(`${productosCreados.length} productos base creados`);
+
+    const nombresProductosExtra = [
+      'Pollo a la Brasa', 'Ají de Gallina', 'Seco de Carne', 'Cau Cau',
+      'Papa a la Huancaína', 'Tamales', 'Causa Limeña', 'Anticuchos',
+      'Pachamanca', 'Olluquito con Charqui', 'Arroz con Mariscos',
+      'Chupe de Camarones', 'Ceviche de Conchas', 'Rocoto Relleno',
+      'Tacu Tacu', 'Milanesa de Pollo', 'Bistec a lo Pobre', 'Saltado de Mariscos',
+      'Pariwana', 'Sopa Seca', 'Choclo con Queso', 'Papa Rellena',
+      'Rachi', 'Pan con Chicharrón', 'Yuca Frita', 'Chicha Morada',
+      'Emoliente', 'Mate de Muña', 'Naranjilla', 'Inca Kola',
+      'Shampoo Anticaspa', 'Crema para Manos', 'Tónico Capilar',
+      'Serum Vitamina C', 'Leche Demaquillante', 'Tónico Facial',
+      'Crema de Noche', 'Mascarilla de Arcilla', 'Spray Fijador',
+      'Perfume Floral', 'Aceite de Argán', 'Crema para Ojeras',
+      'Jabón Carbón Activado', 'Píling Labial', 'Mantequilla Corporal',
+      'Spray Corporal', 'Talco Natural', 'Crema Cicatrizante',
+      'Bálsamo para Masajes', 'Aceite Esencial Lavanda', 'Gel para Cejas',
+      'Máscara de Pestañas', 'Base Líquida', 'Rubor Natural',
+      'Sombras Tierra', 'Corrector Líquido', 'Brillo Labial',
+      'Protector Labial FPS15', 'Crema para Cutículas', 'Esmalte Sin Formaldehído',
+    ];
+
+    for (let i = 0; i < 60; i++) {
+      const cat = i % 2 === 0 ? 'Alimentos' : 'Cuidado Personal';
+      const prod = await Producto.create({
+        nombre: nombresProductosExtra[i],
+        precio: randomBetween(3, 35),
+        stock: Math.floor(Math.random() * 80) + 10,
+        categoria: cat,
+        valoracion: randomBetween(3.5, 5.0),
+        descripcion: `Descripción del producto ${nombresProductosExtra[i]}`,
+      });
+      productosCreados.push(prod);
+    }
+    console.log(`${productosCreados.length} productos totales creados`);
 
     const clientes = usuariosCreados.filter(u => u.rol === 'Cliente');
     const admin = usuariosCreados.find(u => u.rol === 'Admin');
@@ -221,21 +334,35 @@ async function seed() {
       });
       postsCreados.push(post);
     }
-    console.log(`${postsCreados.length} posts creados`);
+    console.log(`${postsCreados.length} posts base creados`);
 
-    const likesCreados = [];
+    for (let i = 0; i < 60; i++) {
+      const autor = clientes[Math.floor(Math.random() * clientes.length)];
+      const prefijo = randomFrom(prefijosPost);
+      const sufijo = randomFrom(sufijosPost);
+      const contenido = `${prefijo} ${randomFrom(productosCreados.map(p => p.nombre))}${sufijo}`;
+      const post = await Post.create({
+        contenido,
+        autor: autor._id,
+        fecha: new Date(Date.now() - Math.random() * 60 * 86400000),
+      });
+      postsCreados.push(post);
+    }
+    console.log(`${postsCreados.length} posts totales creados`);
+
     const likesSet = new Set();
-    for (let i = 0; i < 30; i++) {
-      let post, usuario;
-      let key;
-      do {
-        post = postsCreados[Math.floor(Math.random() * postsCreados.length)];
-        usuario = clientes[Math.floor(Math.random() * clientes.length)];
-        key = `${post._id}-${usuario._id}`;
-      } while (likesSet.has(key));
-      likesSet.add(key);
-      const like = await PostLike.create({ postId: post._id, usuarioId: usuario._id, fecha: new Date(Date.now() - Math.random() * 30 * 86400000) });
-      likesCreados.push(like);
+    const likesCreados = [];
+    let intentosLikes = 0;
+    while (likesCreados.length < 100 && intentosLikes < 500) {
+      intentosLikes++;
+      const post = postsCreados[Math.floor(Math.random() * postsCreados.length)];
+      const usuario = clientes[Math.floor(Math.random() * clientes.length)];
+      const key = `${post._id}-${usuario._id}`;
+      if (!likesSet.has(key)) {
+        likesSet.add(key);
+        const like = await PostLike.create({ postId: post._id, usuarioId: usuario._id, fecha: new Date(Date.now() - Math.random() * 30 * 86400000) });
+        likesCreados.push(like);
+      }
     }
     console.log(`${likesCreados.length} likes creados`);
 
@@ -262,38 +389,64 @@ async function seed() {
         });
       }
     }
-    console.log(`${comentariosCreados.length} comentarios creados`);
+    console.log(`${comentariosCreados.length} comentarios base creados`);
+
+    for (let i = 0; i < 60; i++) {
+      const post = postsCreados[Math.floor(Math.random() * postsCreados.length)];
+      const autor = clientes[Math.floor(Math.random() * clientes.length)];
+      const contenido = randomFrom(textosComentariosExtra);
+      const comment = await Comment.create({
+        contenido,
+        autor: autor._id,
+        postId: post._id,
+        fecha: new Date(Date.now() - Math.random() * 30 * 86400000),
+      });
+      comentariosCreados.push(comment);
+
+      if (post.autor.toString() !== autor._id.toString()) {
+        await Notificacion.create({
+          usuarioId: post.autor,
+          tipo: 'comentario',
+          mensaje: `${autor.nombre} comentó en tu publicación: "${contenido.substring(0, 30)}..."`,
+          referenciaId: post._id,
+          leido: Math.random() > 0.4,
+          fecha: new Date(Date.now() - Math.random() * 30 * 86400000),
+        });
+      }
+    }
+    console.log(`${comentariosCreados.length} comentarios totales creados`);
 
     const followsSet = new Set();
     let followsCreados = 0;
-    for (let i = 0; i < 40; i++) {
+    let intentosFollow = 0;
+    while (followsCreados < 100 && intentosFollow < 500) {
+      intentosFollow++;
       let seguidor, seguido, key;
-      do {
-        seguidor = clientes[Math.floor(Math.random() * clientes.length)];
-        const targetType = Math.random();
-        if (targetType < 0.2) {
-          seguido = admin;
-        } else if (targetType < 0.4) {
-          seguido = repartidores[Math.floor(Math.random() * repartidores.length)];
-        } else {
-          seguido = clientes.filter(c => c._id.toString() !== seguidor._id.toString())[Math.floor(Math.random() * (clientes.length - 1))];
+      seguidor = clientes[Math.floor(Math.random() * clientes.length)];
+      const targetType = Math.random();
+      if (targetType < 0.2) {
+        seguido = admin;
+      } else if (targetType < 0.4) {
+        seguido = repartidores[Math.floor(Math.random() * repartidores.length)];
+      } else {
+        seguido = clientes.filter(c => c._id.toString() !== seguidor._id.toString())[Math.floor(Math.random() * (clientes.length - 1))];
+      }
+      key = `${seguidor._id}-${seguido._id}`;
+      if (!followsSet.has(key)) {
+        followsSet.add(key);
+        await Follow.create({ seguidor: seguidor._id, seguido: seguido._id, fecha: new Date(Date.now() - Math.random() * 60 * 86400000) });
+        followsCreados++;
+
+        if (seguido._id.toString() !== seguidor._id.toString()) {
+          await Notificacion.create({
+            usuarioId: seguido._id,
+            tipo: 'seguidor',
+            mensaje: `${seguidor.nombre} empezó a seguirte`,
+            referenciaId: seguidor._id,
+            leido: Math.random() > 0.4,
+            fecha: new Date(Date.now() - Math.random() * 60 * 86400000),
+          });
         }
-        key = `${seguidor._id}-${seguido._id}`;
-      } while (followsSet.has(key));
-      followsSet.add(key);
-
-      await Follow.create({ seguidor: seguidor._id, seguido: seguido._id, fecha: new Date(Date.now() - Math.random() * 60 * 86400000) });
-      followsCreados++;
-
-      if (seguido._id.toString() !== seguidor._id.toString()) {
-        await Notificacion.create({
-          usuarioId: seguido._id,
-          tipo: 'seguidor',
-          mensaje: `${seguidor.nombre} empezó a seguirte`,
-          referenciaId: seguidor._id,
-          leido: Math.random() > 0.4,
-          fecha: new Date(Date.now() - Math.random() * 60 * 86400000),
-        });
       }
     }
     console.log(`${followsCreados} seguidores creados`);
@@ -315,7 +468,7 @@ async function seed() {
     console.log('Notificaciones generadas');
 
     const pedidosCreados = [];
-    for (let i = 0; i < 40; i++) {
+    for (let i = 0; i < 100; i++) {
       const cliente = clientes[Math.floor(Math.random() * clientes.length)];
       const cantidadProductos = Math.floor(Math.random() * 4) + 1;
       const productosPedido = [];
@@ -344,7 +497,7 @@ async function seed() {
       montoGrabado = Number(montoGrabado.toFixed(2));
       const igv = Number((montoGrabado * 0.18).toFixed(2));
       const montoTotal = Number((montoGrabado + igv).toFixed(2));
-      const estadosPosibles = i < 7 ? ['Pendiente'] : i < 15 ? ['Pendiente', 'En Camino'] : ['Pendiente', 'En Camino', 'Entregado'];
+      const estadosPosibles = i < 10 ? ['Pendiente'] : i < 25 ? ['Pendiente', 'En Camino'] : ['Pendiente', 'En Camino', 'Entregado'];
       const estado = estadosPosibles[Math.floor(Math.random() * estadosPosibles.length)];
 
       const pedidoObj = {
@@ -354,7 +507,7 @@ async function seed() {
         direccionEntrega: direccionesEntrega[Math.floor(Math.random() * direccionesEntrega.length)],
         fecha: new Date(Date.now() - Math.random() * 45 * 86400000),
         boleta: {
-          numeroBoleta: `B001-${String(100000 + i).padStart(6, '0')}`,
+          numeroBoleta: `B001-${String(200000 + i).padStart(6, '0')}`,
           productos: productosPedido,
           montoGrabado,
           igv,
